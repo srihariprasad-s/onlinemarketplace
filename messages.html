@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chats List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-card {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #ffffff;
+        }
+
+        .chat-card img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 15px;
+        }
+
+        .chat-card .details {
+            flex-grow: 1;
+        }
+
+        .chat-card .details p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .back-button {
+            background-color: #ff69b4;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="back-button" onclick="window.location.href='home.html'">Back to Home</button>
+        <div id="chats-list"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, doc, getDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+           apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+            authDomain: "projj-7fa1d.firebaseapp.com",
+            projectId: "projj-7fa1d",
+            storageBucket: "projj-7fa1d.appspot.com",
+            messagingSenderId: "731552517830",
+            appId: "1:731552517830:web:10447552198f5af07c91c7",
+            measurementId: "G-H5JBP27FBD"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Fetch individual chats for a user
+        async function fetchChats(userId) {
+            try {
+                const chatsRef = collection(db, 'chats');
+                const userChatsQuery = query(chatsRef, where('users', 'array-contains', userId));
+                const chatDocs = await getDocs(userChatsQuery);
+
+                console.log('Chats fetched:', chatDocs.docs.map(doc => ({ id: doc.id, data: doc.data() }))); // Include doc.id
+
+                return chatDocs;
+            } catch (error) {
+                console.error('Error fetching chats:', error);
+                return [];
+            }
+        }
+
+        // Fetch group chats for a user
+        async function fetchGroupChats(userId) {
+            try {
+                const groupChatsRef = collection(db, 'groupChats');
+                const userGroupChatsQuery = query(groupChatsRef, where('users', 'array-contains', userId));
+                const groupChatDocs = await getDocs(userGroupChatsQuery);
+
+                console.log('Group chats fetched:', groupChatDocs.docs.map(doc => ({ id: doc.id, data: doc.data() }))); // Include doc.id
+
+                return groupChatDocs;
+            } catch (error) {
+                console.error('Error fetching group chats:', error);
+                return [];
+            }
+        }
+
+        // Fetch protected chats for a user
+        async function fetchProtectedChats(userId) {
+            try {
+                const protectedChatsRef = collection(db, 'protectedChats');
+                const userProtectedChatsQuery = query(protectedChatsRef, where('users', 'array-contains', userId));
+                const protectedChatDocs = await getDocs(userProtectedChatsQuery);
+
+                console.log('Protected chats fetched:', protectedChatDocs.docs.map(doc => ({ id: doc.id, data: doc.data() }))); // Include doc.id
+
+                return protectedChatDocs;
+            } catch (error) {
+                console.error('Error fetching protected chats:', error);
+                return [];
+            }
+        }
+
+        // Fetch the last message for a chat
+        async function getLastMessage(chatId, chatType) {
+            try {
+                const collectionPath = chatType === 'group' ? `groupChats/${chatId}/messages` : 
+                                      chatType === 'protected' ? `protectedChats/${chatId}/messages` : 
+                                      `chats/${chatId}/messages`;
+                const messagesRef = collection(db, collectionPath);
+                const messagesQuery = query(messagesRef, orderBy('timestamp', 'desc'), limit(1));
+                const messageDocs = await getDocs(messagesQuery);
+                
+                console.log('Last message fetched for chatId', chatId, ':', messageDocs.docs.map(doc => doc.data())); // Debugging line
+
+                if (!messageDocs.empty) {
+                    return messageDocs.docs[0].data();
+                } else {
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error fetching last message:', error);
+                return null;
+            }
+        }
+
+        // Fetch the product details
+        async function fetchProductDetails(productId) {
+            try {
+                const productDocRef = doc(db, 'products', productId);
+                const productDoc = await getDoc(productDocRef);
+                
+                console.log('Product details fetched for productId', productId, ':', productDoc.data()); // Debugging line
+                
+                return productDoc.exists() ? productDoc.data() : null;
+            } catch (error) {
+                console.error('Error fetching product details:', error);
+                return null;
+            }
+        }
+
+        // Initialize chats list
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userId = user.uid;
+                const chatList = document.getElementById('chats-list');
+                
+                console.log('Authenticated user:', userId); // Debugging line
+
+                const chatDocs = await fetchChats(userId);
+                const groupChatDocs = await fetchGroupChats(userId);
+                const protectedChatDocs = await fetchProtectedChats(userId);
+                
+                chatList.innerHTML = '';
+                
+                if (chatDocs.empty && groupChatDocs.empty && protectedChatDocs.empty) {
+                    chatList.innerHTML = '<p>No chats found.</p>';
+                } else {
+                    for (const chatDoc of chatDocs.docs) {
+                        const chatData = chatDoc.data();
+                        const chatId = chatDoc.id;
+                        
+                        // Get the last message for the chat
+                        const lastMessageData = await getLastMessage(chatId, 'individual');
+                        const lastMessage = lastMessageData ? lastMessageData.message : 'No messages yet';
+                        
+                        // Get product details for the chat
+                        const productData = await fetchProductDetails(chatData.productId);
+                        
+                        if (productData) {
+                            const chatCard = document.createElement('a');
+                            chatCard.classList.add('chat-card');
+                            chatCard.href = `chat.html?chatId=${chatId}&productId=${chatData.productId}&currentUserId=${userId}`;
+                            chatCard.innerHTML = `
+                                <img src="${productData.photoURL || 'https://via.placeholder.com/150'}" alt="${productData.name}">
+                                <div class="details">
+                                    <p><strong>Product:</strong> ${productData.name}</p>
+                                    <p><strong>Last Message:</strong> ${lastMessage}</p>
+                                </div>
+                            `;
+                            chatList.appendChild(chatCard);
+                        } else {
+                            console.warn('Product data not found for productId', chatData.productId); // Debugging line
+                        }
+                    }
+
+                    for (const groupChatDoc of groupChatDocs.docs) {
+                        const groupChatData = groupChatDoc.data();
+                        const chatId = groupChatDoc.id;
+                        
+                        // Get the last message for the group chat
+                        const lastMessageData = await getLastMessage(chatId, 'group');
+                        const lastMessage = lastMessageData ? lastMessageData.message : 'No messages yet';
+                        
+                        // Get product details for the group chat
+                        const productData = await fetchProductDetails(groupChatData.productId);
+                        
+                        if (productData) {
+                            const chatCard = document.createElement('a');
+                            chatCard.classList.add('chat-card');
+                            chatCard.href = `group-chat.html?chatId=${chatId}&productId=${groupChatData.productId}&currentUserId=${userId}`;
+                            chatCard.innerHTML = `
+                                <img src="${productData.photoURL || 'https://via.placeholder.com/150'}" alt="${productData.name}">
+                                <div class="details">
+                                    <p><strong>Product:</strong> ${productData.name}</p>
+                                    <p><strong>Last Message:</strong> ${lastMessage}</p>
+                                </div>
+                            `;
+                            chatList.appendChild(chatCard);
+                        } else {
+                            console.warn('Product data not found for productId', groupChatData.productId); // Debugging line
+                        }
+                    }
+
+                    for (const protectedChatDoc of protectedChatDocs.docs) {
+                        const protectedChatData = protectedChatDoc.data();
+                        const chatId = protectedChatDoc.id;
+                        
+                        // Get the last message for the protected chat
+                        const lastMessageData = await getLastMessage(chatId, 'protected');
+                        const lastMessage = lastMessageData ? lastMessageData.message : 'No messages yet';
+                        
+                        // Get product details for the protected chat
+                        const productData = await fetchProductDetails(protectedChatData.productId);
+                        
+                        if (productData) {
+                            const chatCard = document.createElement('a');
+                            chatCard.classList.add('chat-card');
+                            chatCard.href = `protected-chat.html?chatId=${chatId}&productId=${protectedChatData.productId}&currentUserId=${userId}`;
+                            chatCard.innerHTML = `
+                                <img src="${productData.photoURL || 'https://via.placeholder.com/150'}" alt="${productData.name}">
+                                <div class="details">
+                                    <p><strong>Product:</strong> ${productData.name}</p>
+                                    <p><strong>Last Message:</strong> ${lastMessage}</p>
+                                </div>
+                            `;
+                            chatList.appendChild(chatCard);
+                        } else {
+                            console.warn('Product data not found for productId', protectedChatData.productId); // Debugging line
+                        }
+                    }
+                }
+            } else {
+                window.location.href = 'unauthorized.html';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell Your Item</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text color */
+            margin: 0;
+            padding: 0;
+        }
+        
+        header {
+            background-color: #1f1f1f; /* Darker header */
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+        }
+        
+        main {
+            padding: 2rem;
+            max-width: 800px;
+            margin: auto;
+            background-color: #1e1e1e; /* Dark background for main content */
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        footer {
+            background-color: #1f1f1f; /* Darker footer */
+            color: #fff;
+            text-align: center;
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+        
+        .sell-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .sell-button {
+            background-color: transparent; /* Transparent background */
+            border: none;
+            color: #e0e0e0; /* Light text color */
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            position: relative; /* For underline effect */
+            transition: color 0.3s, transform 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem; /* Bigger font */
+        }
+        
+        .sell-button i {
+            font-size: 1.5rem; /* Larger icons */
+        }
+        
+        .sell-button:hover {
+            color: #ff4081; /* Neon pink text color */
+            transform: scale(1.05);
+        }
+        
+        .sell-button::after {
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #ff4081; /* Red underline */
+            transition: width 0.3s ease, left 0.3s ease;
+        }
+        
+        .sell-button:hover::after {
+            width: 100%;
+            left: 0;
+        }
+
+        /* Tooltip styling */
+        .sell-button .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            width: 200px; /* Bigger tooltip */
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position above the button */
+            left: 50%;
+            margin-left: -100px; /* Center the tooltip */
+            font-size: 0.9rem; /* Slightly larger text */
+            line-height: 1.4rem; /* More readable line height */
+            transition: opacity 0.3s;
+        }
+        
+        .sell-button .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%; /* Arrow at the bottom of tooltip */
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        
+        .sell-button:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        footer {
+            background-color: #1f1f1f;
+            color: #fff;
+            text-align: center;
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 10px 0;
+        }
+        
+        .nav-button {
+            background-color: transparent; /* Transparent background */
+            border: none;
+            color: #e0e0e0; /* Light text color */
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            position: relative; /* For underline effect */
+            transition: color 0.3s;
+        }
+        
+        .nav-button:hover {
+            color: #ff4081; /* Neon pink text color */
+        }
+        
+        .nav-button::after {
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #ff4081; /* Red underline */
+            transition: width 0.3s ease, left 0.3s ease;
+        }
+        
+        .nav-button:hover::after {
+            width: 100%;
+            left: 0;
+        }
+        
+        #sell::after {
+            width: 100%;
+            left: 0;
+        }
+    </style>
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import Firebase scripts
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+            authDomain: "projj-7fa1d.firebaseapp.com",
+            projectId: "projj-7fa1d",
+            storageBucket: "projj-7fa1d.appspot.com",
+            messagingSenderId: "731552517830",
+            appId: "1:731552517830:web:10447552198f5af07c91c7",
+            measurementId: "G-H5JBP27FBD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Check authentication state
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // Redirect to login if no user is logged in
+                window.location.href = 'unauthorized.html';
+            }
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <div class="logo">YourLogo</div>
+    </header>
+
+    <main>
+        <div class="sell-options">
+            <button class="sell-button" onclick="window.location.href='auction.html'">
+                <i class="fas fa-gavel"></i> Auction/List
+                <span class="tooltip">Start an auction to sell your items to the highest bidder.</span>
+            </button>
+            
+        </div>
+    </main>
+
+    <footer>
+        <div class="nav-buttons">
+            <button class="nav-button" id="home" onclick="window.location.href='home.html'">
+                <i class="fas fa-home"></i> Home
+            </button>
+            <button class="nav-button" id="sell">
+                <i class="fas fa-plus"></i> Sell
+            </button>
+            <button class="nav-button" id="me" onclick="window.location.href='me.html'">
+                <i class="fas fa-user"></i> Me
+            </button>
+            <button class="nav-button" id="settings" onclick="window.location.href='settings.html'">
+                <i class="fas fa-cog"></i> Settings
+            </button>
+        </div>
+    </footer>
+</body>
+</html>

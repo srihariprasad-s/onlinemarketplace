@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #1f1f1f;
+            color: #e0e0e0;
+        }
+
+        .back-button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff4081;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: #ff5a92;
+            transform: scale(1.05);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-color: #1e1e1e;
+        }
+
+        .location-options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .location-button, .confirm-button {
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #e0e0e0;
+            transition: box-shadow 0.3s, transform 0.3s;
+            background-color: #2a2a2a;
+            border: none;
+        }
+
+        .location-button:hover, .confirm-button:hover {
+            transform: scale(1.05);
+        }
+
+        .location-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .location-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .location-checkbox input {
+            margin: 0;
+        }
+
+        .location-checkbox:hover {
+            background-color: #ff4081;
+        }
+
+        .confirm-button {
+            margin-top: 20px;
+        }
+
+        .selected-locations {
+            margin-top: 20px;
+            color: #ff4081;
+            font-size: 1.2rem;
+        }
+
+        .available-locations {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-align: center;
+            color: #ff4081;
+        }
+
+        .available-locations span {
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <button class="back-button" onclick="window.location.href='home.html'">
+            <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <div class="logo">Location Settings</div>
+    </header>
+
+    <main>
+        <div class="available-locations" id="available-locations">
+            <!-- Display available locations here -->
+        </div>
+
+        <div class="location-options">
+            <button class="location-button" id="track-location">
+                <i class="fas fa-map-marker-alt"></i> Track My Location
+            </button>
+        </div>
+
+        <div class="location-checkboxes">
+            <!-- Dynamically generated location checkboxes will be inserted here -->
+        </div>
+
+        <div class="selected-locations" id="selected-locations">
+            <!-- Display selected locations here -->
+        </div>
+
+        <button class="confirm-button" id="confirm-button">
+            Confirm
+        </button>
+    </main>
+
+    <script type="module">
+        // Import Firebase scripts
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+        import { getFirestore, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+            authDomain: "projj-7fa1d.firebaseapp.com",
+            projectId: "projj-7fa1d",
+            storageBucket: "projj-7fa1d.appspot.com",
+            messagingSenderId: "731552517830",
+            appId: "1:731552517830:web:10447552198f5af07c91c7",
+            measurementId: "G-H5JBP27FBD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const countries = {
+            "Afghanistan": "🇦🇫", "Albania": "🇦🇱", "Algeria": "🇩🇿", "Andorra": "🇦🇩", "Angola": "🇦🇴",
+            "Antigua and Barbuda": "🇦🇬", "Argentina": "🇦🇷", "Armenia": "🇦🇲", "Australia": "🇦🇺", "Austria": "🇦🇹",
+            "Azerbaijan": "🇦🇿", "Bahamas": "🇧🇸", "Bahrain": "🇧🇭", "Bangladesh": "🇧🇩", "Barbados": "🇧🇧",
+            "Belarus": "🇧🇾", "Belgium": "🇧🇪", "Belize": "🇧🇿", "Benin": "🇧🇯", "Bhutan": "🇧🇹",
+            "Bolivia": "🇧🇴", "Bosnia and Herzegovina": "🇧🇦", "Botswana": "🇧🇼", "Brazil": "🇧🇷", "Brunei": "🇧🇳",
+            "Bulgaria": "🇧🇬", "Burkina Faso": "🇧🇫", "Burundi": "🇧🇮", "Cabo Verde": "🇨🇻", "Cambodia": "🇰🇭",
+            "Cameroon": "🇨🇲", "Canada": "🇨🇦", "Central African Republic": "🇨🇫", "Chad": "🇹🇩", "Chile": "🇨🇱",
+            "China": "🇨🇳", "Colombia": "🇨🇴", "Comoros": "🇰🇲", "Congo": "🇨🇬", "Costa Rica": "🇨🇷",
+            "Croatia": "🇭🇷", "Cuba": "🇨🇺", "Cyprus": "🇨🇾", "Czech Republic": "🇨🇿", "Denmark": "🇩🇰",
+            "Djibouti": "🇩🇯", "Dominica": "🇩🇲", "Dominican Republic": "🇩🇴", "Ecuador": "🇪🇨", "Egypt": "🇪🇬",
+            "El Salvador": "🇸🇻", "Equatorial Guinea": "🇬🇶", "Eritrea": "🇪🇷", "Estonia": "🇪🇪", "Eswatini": "🇸🇿",
+            "Ethiopia": "🇪🇹", "Fiji": "🇫🇯", "Finland": "🇫🇮", "France": "🇫🇷", "Gabon": "🇬🇦",
+            "Gambia": "🇬🇲", "Georgia": "🇬🇪", "Germany": "🇩🇪", "Ghana": "🇬🇭", "Greece": "🇬🇷",
+            "Grenada": "🇬🇩", "Guatemala": "🇬🇹", "Guinea": "🇬🇳", "Guinea-Bissau": "🇬🇼", "Guyana": "🇬🇾",
+            "Haiti": "🇭🇹", "Honduras": "🇭🇳", "Hungary": "🇭🇺", "Iceland": "🇮🇸", "India": "🇮🇳",
+            "Indonesia": "🇮🇩", "Iran": "🇮🇷", "Iraq": "🇮🇶", "Ireland": "🇮🇪", "Israel": "🇮🇱",
+            "Italy": "🇮🇹", "Jamaica": "🇯🇲", "Japan": "🇯🇵", "Jordan": "🇯🇴", "Kazakhstan": "🇰🇿",
+            "Kenya": "🇰🇪", "Kiribati": "🇰🇮", "Kuwait": "🇰🇼", "Kyrgyzstan": "🇰🇬", "Laos": "🇱🇦",
+            "Latvia": "🇱🇻", "Lebanon": "🇱🇧", "Lesotho": "🇱🇸", "Liberia": "🇱🇷", "Libya": "🇱🇾",
+            "Liechtenstein": "🇱🇮", "Lithuania": "🇱🇹", "Luxembourg": "🇱🇺", "Madagascar": "🇲🇬", "Malawi": "🇲🇼",
+            "Malaysia": "🇲🇾", "Maldives": "🇲🇻", "Mali": "🇲🇱", "Malta": "🇲🇹", "Marshall Islands": "🇲🇭",
+            "Mauritania": "🇲🇷", "Mauritius": "🇲🇺", "Mexico": "🇲🇽", "Micronesia": "🇫🇲", "Moldova": "🇲🇩",
+            "Monaco": "🇲🇨", "Mongolia": "🇲🇳", "Montenegro": "🇲🇪", "Morocco": "🇲🇦", "Mozambique": "🇲🇿",
+            "Myanmar": "🇲🇲", "Namibia": "🇳🇦", "Nauru": "🇳🇷", "Nepal": "🇳🇵", "Netherlands": "🇳🇱",
+            "New Zealand": "🇳🇿", "Nicaragua": "🇳🇮", "Niger": "🇳🇪", "Nigeria": "🇳🇬", "North Korea": "🇰🇵",
+            "North Macedonia": "🇲🇰", "Norway": "🇳🇴", "Oman": "🇴🇲", "Pakistan": "🇵🇰", "Palau": "🇵🇼",
+            "Palestine": "🇵🇸", "Panama": "🇵🇦", "Papua New Guinea": "🇵🇬", "Paraguay": "🇵🇾", "Peru": "🇵🇪",
+            "Philippines": "🇵🇭", "Poland": "🇵🇱", "Portugal": "🇵🇹", "Qatar": "🇶🇦", "Romania": "🇷🇴",
+            "Russia": "🇷🇺", "Rwanda": "🇷🇼", "Saint Kitts and Nevis": "🇰🇳", "Saint Lucia": "🇱🇨", "Saint Vincent and the Grenadines": "🇻🇨",
+            "Samoa": "🇼🇸", "San Marino": "🇸🇲", "Sao Tome and Principe": "🇸🇹", "Saudi Arabia": "🇸🇦", "Senegal": "🇸🇳",
+            "Serbia": "🇷🇸", "Seychelles": "🇸🇨", "Sierra Leone": "🇸🇱", "Singapore": "🇸🇬", "Slovakia": "🇸🇰",
+            "Slovenia": "🇸🇮", "Solomon Islands": "🇸🇧", "Somalia": "🇸🇴", "South Africa": "🇿🇦", "South Korea": "🇰🇷",
+            "South Sudan": "🇸🇸", "Spain": "🇪🇸", "Sri Lanka": "🇱🇰", "Sudan": "🇸🇩", "Suriname": "🇸🇷",
+            "Sweden": "🇸🇪", "Switzerland": "🇨🇭", "Syria": "🇸🇾", "Taiwan": "🇹🇼", "Tajikistan": "🇹🇯",
+            "Tanzania": "🇹🇿", "Thailand": "🇹🇭", "Togo": "🇹🇬", "Tonga": "🇹🇴", "Trinidad and Tobago": "🇹🇹",
+            "Tunisia": "🇹🇳", "Turkey": "🇹🇷", "Turkmenistan": "🇹🇲", "Tuvalu": "🇹🇻", "Uganda": "🇺🇬",
+            "Ukraine": "🇺🇦", "United Arab Emirates": "🇦🇪", "United Kingdom": "🇬🇧", "United States": "🇺🇸", "Uruguay": "🇺🇾",
+            "Uzbekistan": "🇺🇿", "Vanuatu": "🇻🇺", "Vatican City": "🇻🇦", "Venezuela": "🇻🇪", "Vietnam": "🇻🇳",
+            "Yemen": "🇾🇪", "Zambia": "🇿🇲", "Zimbabwe": "🇿🇼"
+        };
+
+        const selectedLocations = [];
+
+        const updateSelectedLocationsUI = () => {
+            const selectedLocationsElement = document.getElementById('selected-locations');
+            selectedLocationsElement.innerHTML = selectedLocations.map(country => `${countries[country]} ${country}`).join(', ');
+        };
+
+        const updateAvailableLocationsUI = (locations) => {
+            const availableLocationsElement = document.getElementById('available-locations');
+            availableLocationsElement.innerHTML = `You are available in: ${locations.map(country => `${countries[country]} ${country}`).join(', ')}`;
+        };
+
+        // Function to load user locations
+        const loadUserLocations = async () => {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    const userDocRef = doc(db, "users", user.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        const userLocations = userData.location || [];
+                        updateAvailableLocationsUI(userLocations);
+                    }
+                }
+            });
+        };
+
+        // Load the locations when the page is loaded
+        loadUserLocations();
+
+        // Function to dynamically generate location checkboxes
+        const generateLocationCheckboxes = () => {
+            const locationCheckboxesElement = document.querySelector('.location-checkboxes');
+            locationCheckboxesElement.innerHTML = '';
+            Object.keys(countries).forEach(country => {
+                const label = document.createElement('label');
+                label.classList.add('location-checkbox');
+                label.innerHTML = `
+                    <input type="checkbox" value="${country}"> ${countries[country]} ${country}
+                `;
+                label.addEventListener('click', (e) => {
+                    const checkbox = label.querySelector('input');
+                    checkbox.checked = !checkbox.checked;
+                    if (checkbox.checked && !selectedLocations.includes(country)) {
+                        selectedLocations.push(country);
+                    } else if (!checkbox.checked && selectedLocations.includes(country)) {
+                        const index = selectedLocations.indexOf(country);
+                        if (index > -1) {
+                            selectedLocations.splice(index, 1);
+                        }
+                    }
+                    updateSelectedLocationsUI();
+                });
+                locationCheckboxesElement.appendChild(label);
+            });
+        };
+
+        // Generate checkboxes on page load
+        generateLocationCheckboxes();
+
+        // Function to handle track location button click
+        document.getElementById('track-location').addEventListener('click', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+                    const data = await response.json();
+                    const country = data.countryName;
+                    if (country && !selectedLocations.includes(country) && countries[country]) {
+                        selectedLocations.push(country);
+                        updateSelectedLocationsUI();
+                    } else if (!countries[country]) {
+                        alert('Unable to determine your location.');
+                    }
+                });
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        });
+
+        // Function to handle confirm button click
+        document.getElementById('confirm-button').addEventListener('click', async () => {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    const userDocRef = doc(db, "users", user.uid);
+                    await updateDoc(userDocRef, {
+                        location: selectedLocations
+                    });
+                    alert('Locations saved successfully!');
+                    loadUserLocations(); // Refresh the UI
+                }
+            });
+        });
+    </script>
+</body>
+</html>

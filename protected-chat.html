@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        .page-container {
+            display: flex;
+            justify-content: center;
+            align-items: start;
+            height: 100vh;
+            padding: 20px;
+        }
+        .chat-container {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 600px;
+            max-width: 600px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            margin-right: 20px;
+        }
+        .back-button {
+            background-color: #ff69b4;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            align-self: flex-start;
+            font-size: 16px;
+        }
+        .product-card {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #333333;
+            background-color: #2c2c2c;
+        }
+        .product-card img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 15px;
+        }
+        .product-details {
+            flex-grow: 1;
+        }
+        .product-details p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        .message-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .message-container.sent {
+            justify-content: flex-end;
+        }
+        .message-container.received {
+            justify-content: flex-start;
+        }
+        .profile-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 10px;
+            object-fit: cover;
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 75%;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .message.sent {
+            background-color: #ff69b4;
+            color: white;
+            align-self: flex-end;
+        }
+        .message.received {
+            background-color: #333333;
+            color: #ffffff;
+            align-self: flex-start;
+        }
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #333333;
+            background-color: #2c2c2c;
+        }
+        .chat-input input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #555555;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-right: 10px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        .chat-input button {
+            background-color: #ff69b4;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 10px;
+            border-top: 1px solid #333333;
+            background-color: #2c2c2c;
+        }
+        .action-buttons button {
+            margin: 5px;
+            background-color: #ff69b4;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .action-buttons button:disabled {
+            background-color: #666666;
+            cursor: not-allowed;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            background-color: #f1f1f1;
+        }
+        .user-email {
+            font-size: 12px;
+            color: cyan;
+            text-decoration: underline;
+            margin-bottom: 0;
+        }
+        .message-text {
+            font-size: 14px;
+            color: #000;
+        }
+        #chat-input-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #1a1a1a;
+            border-top: 1px solid #444;
+        }
+        #chat-input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        #send-button {
+            padding: 10px 15px;
+            background-color: #ff69b4;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #send-button:hover {
+            background-color: #ff1493;
+        }
+        .review-section {
+            width: 300px;
+        }
+        .review-container {
+            display: none;
+            padding: 15px;
+            background-color: #2c2c2c;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .review-container textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border: 1px solid #555555;
+            border-radius: 5px;
+        }
+        .star-rating {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .star-rating input {
+            display: none;
+        }
+        .star-rating label {
+            cursor: pointer;
+            font-size: 30px;
+            color: #ddd;
+        }
+        .star-rating label:before {
+            content: '\2605';
+        }
+        .star-rating input:checked ~ label {
+            color: #ffdb58;
+        }
+        .submit-review {
+            background-color: #ff69b4;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .review-display {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #2c2c2c;
+            border-radius: 5px;
+        }
+        .review-display h4 {
+            margin-top: 0;
+        }
+        .star-display {
+            color: gold;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="chat-container">
+            <!-- Back Button -->
+            <button class="back-button" onclick="window.location.href='home.html'">Back to Home</button>
+            
+            <!-- Product Card -->
+            <div id="product-card" class="product-card"></div>
+    
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="chat-messages"></div>
+    
+            <!-- Action Buttons -->
+            <div id="action-buttons" class="action-buttons">
+                <!-- Seller Buttons -->
+                <button id="reserve-button" style="display: none;">Reserve</button>
+                <button id="request-admin-seller" style="display: none;">Request Admin</button>
+                <button id="accept-offer-button" style="display: none;" disabled>Accept Offer</button>
+                <button id="shipped-button" style="display: none;" disabled>Shipped</button>
+                <button id="confirm-deal-button" style="display: none;" disabled>Confirm Deal</button>
+    
+                <!-- Buyer Buttons -->
+                <button id="request-admin-buyer" style="display: none;">Request Admin</button>
+                <button id="make-offer-button" style="display: none;">Make Offer</button>
+                <button id="add-to-cart-button" style="display: none;">Add to Cart</button>
+                <button id="received-button" style="display: none;" disabled>Received</button>
+    
+                <!-- Admin Buttons -->
+                <button id="ship-button" style="display: none;">Ship</button>
+                <button id="paid-button" style="display: none;">Paid</button>
+            </div>
+    
+            <!-- User Info -->
+            <div id="user-info"></div>
+    
+            <!-- Chat Input Area -->
+            <div id="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Type your message...">
+                <button id="send-button">Send</button>
+            </div>
+        </div>
+    
+        <!-- Review Section -->
+        <div class="review-section">
+            <div id="review-container">
+                <textarea id="review-text" placeholder="Leave your review here..."></textarea>
+                <div>
+                    <input type="radio" id="star5" name="rating" value="5"><label for="star5">★</label>
+                    <input type="radio" id="star4" name="rating" value="4"><label for="star4">★</label>
+                    <input type="radio" id="star3" name="rating" value="3"><label for="star3">★</label>
+                    <input type="radio" id="star2" name="rating" value="2"><label for="star2">★</label>
+                    <input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label>
+                </div>
+                <button id="submit-review">Submit Review</button>
+                <div id="error-message" style="color:red;"></div>
+            </div>
+            
+            <div id="review-display"></div>
+    </div>
+    <script type="module">
+        // Firebase and Firestore initialization
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+import { getFirestore,getDocs, doc, getDoc, collection, query, orderBy, addDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+import { where } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+    authDomain: "projj-7fa1d.firebaseapp.com",
+    projectId: "projj-7fa1d",
+    storageBucket: "projj-7fa1d.appspot.com",
+    messagingSenderId: "731552517830",
+    appId: "1:731552517830:web:10447552198f5af07c91c7",
+    measurementId: "G-H5JBP27FBD"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const ADMIN_ID = 'KPAuOU28A7apFClq2QsWBhpw9yC3';
+const urlParams = new URLSearchParams(window.location.search);
+const productId = urlParams.get('productId');
+const chatId = urlParams.get('chatId');
+const currentUserId = urlParams.get('currentUserId');
+
+// Fetch product details
+async function fetchProductDetails(productId) {
+    const productDocRef = doc(db, 'products', productId);
+    const productDoc = await getDoc(productDocRef);
+    if (productDoc.exists()) {
+        return productDoc.data();
+    } else {
+        console.error('Product not found!');
+        return null;
+    }
+}
+
+// Fetch user data
+async function fetchUserData(userId) {
+    const userDocRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userDocRef);
+    if (userDoc.exists()) {
+        return userDoc.data();
+    } else {
+        return { profilePhotoUrl: 'https://via.placeholder.com/100', email: 'Unknown' }; // Default profile photo and email
+    }
+}
+
+// Fetch chat messages
+async function fetchChatMessages(chatId) {
+    const chatMessagesRef = collection(db, `protectedChats/${chatId}/messages`);
+    const messagesQuery = query(chatMessagesRef, orderBy('timestamp', 'asc'));
+
+    onSnapshot(messagesQuery, async (snapshot) => {
+        const chatMessages = document.getElementById('chat-messages');
+        chatMessages.innerHTML = '';
+        for (const doc of snapshot.docs) {
+            const messageData = doc.data();
+            const userData = await fetchUserData(messageData.senderId);
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message-container', messageData.senderId === currentUserId ? 'sent' : 'received');
+            messageElement.innerHTML = `
+                <img src="${userData.profilePhotoUrl}" alt="Profile Photo" class="profile-photo">
+                <div class="message ${messageData.senderId === currentUserId ? 'sent' : 'received'}">
+                    <span class="user-email">${userData.email}</span>
+                    ${messageData.message}
+                </div>
+            `;
+            chatMessages.appendChild(messageElement);
+        }
+        chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to bottom
+    });
+}
+
+// Send chat message
+async function sendMessage(chatId, messageText, senderId) {
+    const chatDocRef = doc(db, 'protectedChats', chatId);
+    const chatDoc = await getDoc(chatDocRef);
+    const chatData = chatDoc.data();
+
+    // Check if sender is admin and if admin is allowed to send messages
+    if (senderId === ADMIN_ID && !chatData.adminRequested) {
+        console.log("Admin cannot send messages until requested");
+        return;
+    }
+
+    const chatMessagesRef = collection(db, `protectedChats/${chatId}/messages`);
+    await addDoc(chatMessagesRef, {
+        message: messageText,
+        senderId: senderId,
+        timestamp: new Date()
+    });
+}
+// Add this function to update the buyerId in the products collection
+async function updateProductBuyerId(productId, buyerId) {
+    const productDocRef = doc(db, 'products', productId);
+    await updateDoc(productDocRef, {
+        buyerId: buyerId
+    });
+}
+// Update product availability
+async function updateProductAvailability(productId, status) {
+    const productDocRef = doc(db, 'products', productId);
+    await updateDoc(productDocRef, {
+        availability: status
+    });
+}
+
+async function createReviewDocument(productId, buyerId, sellerId) {
+    try {
+        const reviewsRef = collection(db, 'reviews');
+        const docRef = await addDoc(reviewsRef, {
+            productId: productId,
+            buyerId: buyerId,
+            sellerId: sellerId,
+            sellerReviewsBuyer: '',
+            buyerReviewsSeller: '',
+            sellerRatesBuyer: 0,
+            buyerRatesSeller: 0
+        });
+        console.log("Review document created with ID: ", docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error("Error creating review document: ", error);
+        throw error;
+    }
+}
+
+async function updateReview(productId, reviewerId, isSellerReview, review, rating) {
+    try {
+        const reviewsRef = collection(db, 'reviews');
+        const q = query(reviewsRef, where('productId', '==', productId));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+            const reviewDoc = querySnapshot.docs[0];
+            
+            let updateData = {};
+            if (isSellerReview) {
+                updateData.sellerReviewsBuyer = review;
+                updateData.sellerRatesBuyer = rating;
+            } else {
+                updateData.buyerReviewsSeller = review;
+                updateData.buyerRatesSeller = rating;
+            }
+            
+            await updateDoc(reviewDoc.ref, updateData);
+            console.log("Review updated successfully");
+            displayReviews(productId);
+        } else {
+            console.error("No review document found for productId: ", productId);
+            throw new Error("No review document found");
+        }
+    } catch (error) {
+        console.error("Error updating review: ", error);
+        throw error;
+    }
+}
+
+
+// Display Reviews for both Buyer and Seller
+async function displayReviews(productId) {
+    try {
+        const reviewsRef = collection(db, 'reviews');
+        const q = query(reviewsRef, where('productId', '==', productId));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+            const reviewDoc = querySnapshot.docs[0];
+            const reviewData = reviewDoc.data();
+            
+            const reviewDisplay = document.getElementById('review-display');
+            reviewDisplay.innerHTML = '';
+            
+            if (reviewData.sellerReviewsBuyer) {
+                const sellerReview = document.createElement('div');
+                sellerReview.innerHTML = `
+                    <h4>Seller's Review of Buyer:</h4>
+                    <p>${reviewData.sellerReviewsBuyer}</p>
+                    <div class="star-display">${'★'.repeat(reviewData.sellerRatesBuyer)}</div>
+                `;
+                reviewDisplay.appendChild(sellerReview);
+            }
+            
+            if (reviewData.buyerReviewsSeller) {
+                const buyerReview = document.createElement('div');
+                buyerReview.innerHTML = `
+                    <h4>Buyer's Review of Seller:</h4>
+                    <p>${reviewData.buyerReviewsSeller}</p>
+                    <div class="star-display">${'★'.repeat(reviewData.buyerRatesSeller)}</div>
+                `;
+                reviewDisplay.appendChild(buyerReview);
+            }
+        }
+    } catch (error) {
+        console.error("Error displaying reviews: ", error);
+    }
+}
+// Call displayReviews when the page loads
+displayReviews(productId);
+
+
+
+// Initialize chat page
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        const isAdmin = user.uid === ADMIN_ID;
+        if (currentUserId === user.uid || isAdmin) {
+            const productData = await fetchProductDetails(productId);
+            const userData = await fetchUserData(currentUserId);
+            if (productData) {
+                document.getElementById('product-card').innerHTML = `
+                    <img src="${productData.photoURL || 'https://via.placeholder.com/150'}" alt="${productData.name}">
+                    <div class="product-details">
+                        <p><strong>Name:</strong> ${productData.name}</p>
+                        <p><strong>Type:</strong> ${productData.type}</p>
+                        <p><strong>Description:</strong> ${productData.description}</p>
+                        <p><strong>Category:</strong> ${productData.category}</p>
+                        <p><strong>Price:</strong> $${productData.price.toFixed(2)}</p>
+                        <p><strong>Posted on:</strong> ${new Date(productData.timestamp).toLocaleDateString()}</p>
+                    </div>
+                `;
+
+                // Display user email above chat box
+                document.getElementById('user-info').innerHTML = `<p><strong>User:</strong> ${userData.email}</p>`;
+
+                // Fetch and display chat messages
+                await fetchChatMessages(chatId);
+
+                // Get chat document reference
+                const chatDocRef = doc(db, 'protectedChats', chatId);
+
+                // Set up a real-time listener
+                onSnapshot(chatDocRef, (doc) => {
+                    if (doc.exists()) {
+                        const chatData = doc.data();
+                        const [buyerId, sellerId, adminId] = chatData.users;
+
+                        // Determine roles
+                        const isBuyer = buyerId === currentUserId;
+                        const isSeller = sellerId === currentUserId;
+                        const isAdminUser = adminId === currentUserId;
+
+                        // Show/Hide buttons based on role and status
+                        if (isBuyer) {
+                            document.getElementById('request-admin-buyer').style.display = 'inline-block';
+                            document.getElementById('make-offer-button').style.display = 'inline-block';
+                            document.getElementById('add-to-cart-button').style.display = 'inline-block';
+                            document.getElementById('received-button').style.display = 'inline-block';
+                            document.getElementById('received-button').disabled = !chatData.isShipped;
+                        } else if (isSeller) {
+                            document.getElementById('reserve-button').style.display = 'inline-block';
+                            document.getElementById('request-admin-seller').style.display = 'inline-block';
+                            document.getElementById('add-to-cart-button').addEventListener('click', async () => {
+    try {
+        const chatDoc = await getDoc(chatDocRef);
+        const chatData = chatDoc.data();
+        const buyerId = chatData.users[0]; // Assuming the first user in the array is the buyer
+        const sellerId = chatData.users[1]; // Assuming the second user in the array is the seller
+        const productData = await fetchProductDetails(productId);
+
+        // Create a new document in the "carts" collection
+        const cartsRef = collection(db, 'carts');
+        await addDoc(cartsRef, {
+            productId: productId,
+            buyerId: buyerId,
+            sellerId: sellerId,
+            productName: productData.name,
+            productType: productData.type,
+            productPrice: productData.price,
+            sellerEmail: (await fetchUserData(sellerId)).email,
+            timestamp: new Date(),
+            cartStatus: 'added'
+        });
+
+        // Redirect the user to the cart page
+        window.location.href = 'cart.html?currentUserId=' + currentUserId;
+    } catch (error) {
+        console.error('Error adding product to cart:', error);
+        alert('Failed to add product to cart. Please try again.');
+    }
+});
+                            document.getElementById('shipped-button').style.display = 'inline-block';
+                            document.getElementById('confirm-deal-button').style.display = 'inline-block';
+                            document.getElementById('accept-offer-button').disabled = !chatData.offerMade;
+                            document.getElementById('shipped-button').disabled = !chatData.isShipped;
+                            document.getElementById('confirm-deal-button').disabled = !chatData.isPaid;
+                            
+                            const reserveButton = document.getElementById('reserve-button');
+                            reserveButton.textContent = chatData.isReserved ? 'Unreserve' : 'Reserve';
+                        } else if (isAdminUser) {
+                            document.getElementById('ship-button').style.display = 'inline-block';
+                            document.getElementById('paid-button').style.display = 'inline-block';
+                            document.getElementById('paid-button').disabled = !chatData.isReceived;
+                        }
+                        
+                        // Enable/disable chat input for admin
+                        const chatInput = document.getElementById('chat-input');
+                        const sendButton = document.getElementById('send-button');
+                        if (isAdminUser) {
+                            chatInput.disabled = !chatData.adminRequested;
+                            sendButton.disabled = !chatData.adminRequested;
+                        } else {
+                            chatInput.disabled = false;
+                            sendButton.disabled = false;
+                        }
+                    }
+                    
+                });
+                
+                // Handle "Reserve/Unreserve" button click
+                document.getElementById('reserve-button').addEventListener('click', async () => {
+                    const reserveButton = document.getElementById('reserve-button');
+                    const isReserved = reserveButton.textContent === 'Unreserve';
+
+                    await updateDoc(chatDocRef, { isReserved: !isReserved });
+                    await updateProductAvailability(productId, isReserved ? 'available' : 'reserved');
+                    await sendMessage(chatId, `The seller has ${isReserved ? 'unreserved' : 'reserved'} the product`, currentUserId);
+                });
+
+                // Handle "Request Admin" button click (for both seller and buyer)
+                document.getElementById('request-admin-seller').addEventListener('click', handleRequestAdmin);
+                document.getElementById('request-admin-buyer').addEventListener('click', handleRequestAdmin);
+
+                async function handleRequestAdmin() {
+                    await sendMessage(chatId, 'An admin has been requested to join the conversation.', currentUserId);
+                    await updateDoc(chatDocRef, { adminRequested: true });
+                    console.log('Admin requested');
+                }
+
+                // Modify the "Accept Offer" button click handler
+                document.getElementById('accept-offer-button').addEventListener('click', async () => {
+    const chatDoc = await getDoc(chatDocRef);
+    const chatData = chatDoc.data();
+    const buyerId = chatData.users[0]; // Assuming the first user in the array is the buyer
+    const sellerId = chatData.users[1]; // Assuming the second user in the array is the seller
+
+    await sendMessage(chatId, 'The seller has accepted the offer', currentUserId);
+    await updateProductAvailability(productId, 'sold');
+    await updateProductBuyerId(productId, buyerId); // Update buyerId in products collection
+    await updateDoc(chatDocRef, { offerAccepted: true });
+
+    // Create review document
+    await createReviewDocument(productId, buyerId, sellerId);
+
+    // Show review container
+    document.getElementById('review-container').style.display = 'block';
+});
+
+                // Handle "Shipped" button click
+                document.getElementById('shipped-button').addEventListener('click', async () => {
+                    await sendMessage(chatId, 'The seller has shipped the product', currentUserId);
+                    await updateDoc(chatDocRef, { isShipped: true });
+                    await updateProductAvailability(productId, 'pending');
+                });
+
+                // Handle "Received" button click
+                document.getElementById('received-button').addEventListener('click', async () => {
+                    await sendMessage(chatId, 'The buyer has received the product', currentUserId);
+                    await updateDoc(chatDocRef, { isReceived: true });
+                });
+
+                // Handle "Ship" button click (Admin)
+                document.getElementById('ship-button').addEventListener('click', async () => {
+                    await sendMessage(chatId, 'The payment is received from the buyer, seller ship the product', currentUserId);
+                    await updateDoc(chatDocRef, { isShipped: true });
+                });
+
+               // Handle "Paid" button click (Admin)
+                document.getElementById('paid-button').addEventListener('click', async () => {
+                    await sendMessage(chatId, 'Product received by the buyer, seller has been paid', currentUserId);
+                    await updateDoc(chatDocRef, { isPaid: true });
+                });
+// Modify the "Confirm Deal" button click handler
+document.getElementById('confirm-deal-button').addEventListener('click', async () => {
+    const chatDoc = await getDoc(chatDocRef);
+    const chatData = chatDoc.data();
+    const buyerId = chatData.users[0];
+    const sellerId = chatData.users[1];
+
+    await sendMessage(chatId, 'The seller has confirmed the deal', currentUserId);
+    await updateProductAvailability(productId, 'sold');
+    await updateProductBuyerId(productId, buyerId);
+    await updateDoc(chatDocRef, { isConfirmed: true });
+
+    // Create review document if it doesn't exist
+    await createReviewDocument(productId, buyerId, sellerId);
+
+    // Show review container for both seller and buyer
+    document.getElementById('review-container').style.display = 'block';
+});
+               // Add event listener for submit review button
+               document.getElementById('submit-review').addEventListener('click', async () => {
+    const reviewText = document.getElementById('review-text').value;
+    const rating = document.querySelector('input[name="rating"]:checked');
+    const errorMessage = document.getElementById('error-message');
+
+    if (!reviewText || !rating) {
+        errorMessage.textContent = 'Please provide both a review and a rating.';
+        return;
+    }
+
+    const chatDoc = await getDoc(chatDocRef);
+    const chatData = chatDoc.data();
+    const isSeller = chatData.users[1] === currentUserId; // Check if current user is the seller
+
+    try {
+        await updateReview(productId, currentUserId, isSeller, reviewText, parseInt(rating.value));
+        document.getElementById('review-container').style.display = 'none';
+        errorMessage.textContent = '';
+        displayReviews(productId);
+    } catch (error) {
+        console.error('Error submitting review:', error);
+        errorMessage.textContent = 'Failed to submit review. Please try again.';
+    }
+});
+
+
+// Call displayReviews when the page loads
+displayReviews(productId); 
+                // Handle "Make Offer" button click
+                document.getElementById('make-offer-button').addEventListener('click', async () => {
+                    await sendMessage(chatId, 'The buyer has made an offer', currentUserId);
+                    await updateDoc(chatDocRef, { offerMade: true });
+                });
+
+                // Handle "Add to Cart" button click
+                document.getElementById('add-to-cart-button').addEventListener('click', async () => {
+    try {
+        const chatDoc = await getDoc(chatDocRef);
+        const chatData = chatDoc.data();
+        const buyerId = chatData.users[0]; // Assuming the first user in the array is the buyer
+        const sellerId = chatData.users[1]; // Assuming the second user in the array is the seller
+        const productData = await fetchProductDetails(productId);
+
+        // Create a new document in the "carts" collection
+        const cartsRef = collection(db, 'carts');
+        await addDoc(cartsRef, {
+            productId: productId,
+            buyerId: buyerId,
+            sellerId: sellerId,
+            productName: productData.name,
+            productType: productData.type,
+            productPrice: productData.price,
+            sellerEmail: (await fetchUserData(sellerId)).email,
+            timestamp: new Date(),
+            cartStatus: 'added'
+        });
+
+        // Redirect the user to the cart page
+        window.location.href = 'cart.html?currentUserId=' + currentUserId;
+    } catch (error) {
+        console.error('Error adding product to cart:', error);
+        alert('Failed to add product to cart. Please try again.');
+    }
+});
+
+                // Handle send message
+                document.getElementById('send-button').addEventListener('click', sendMessageHandler);
+                document.getElementById('chat-input').addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        sendMessageHandler();
+                    }
+                });
+
+                async function sendMessageHandler() {
+                    const messageText = document.getElementById('chat-input').value.trim();
+                    if (messageText) {
+                        try {
+                            await sendMessage(chatId, messageText, currentUserId);
+                            document.getElementById('chat-input').value = '';
+                        } catch (error) {
+                            console.error('Error sending message:', error);
+                            alert('Failed to send message. Please try again.');
+                        }
+                    }
+                }
+            }
+        }
+    }
+});
+    </script>
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liked Products</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        /* General styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #1f1f1f;
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            background-color: transparent;
+            color: #ff4081;
+            border: 1px solid #ff4081;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #ff4081;
+            color: #fff;
+        }
+
+        main {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .product-card {
+            background-color: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: border 0.3s ease;
+            position: relative;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .product-card:hover {
+            border-color: #ff4081;
+        }
+
+        .product-details {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .product-details p {
+            margin: 0.2rem 0;
+        }
+
+        .product-card img {
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 1rem;
+        }
+
+        .like-button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #e0e0e0;
+        }
+
+        .like-button.liked {
+            color: #ff4081;
+        }
+
+        .like-count {
+            margin-left: 0.5rem;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #1e1e1e;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .popup img {
+            max-width: 100%;
+            max-height: 200px;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .popup-content {
+            color: #e0e0e0;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ff4081;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 50%;
+            font-size: 1rem;
+        }
+
+        .popup button {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: transparent;
+            color: #ff4081;
+            border: 1px solid #ff4081;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .popup button:hover {
+            background-color: #ff4081;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <button class="back-button" onclick="window.location.href='home.html'">Back</button>
+        <div class="logo">YourLogo</div>
+    </header>
+
+    <main>
+        <h1>Liked Products</h1>
+        <div id="liked"></div>
+    </main>
+
+    <div id="popup" class="popup">
+        <button class="close-popup" onclick="closePopup()">X</button>
+        <div id="popup-content" class="popup-content"></div>
+    </div>
+
+    <!-- Include Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+        import { getFirestore, collection, doc, getDoc, getDocs, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+    
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+            authDomain: "projj-7fa1d.firebaseapp.com",
+            projectId: "projj-7fa1d",
+            storageBucket: "projj-7fa1d.appspot.com",
+            messagingSenderId: "731552517830",
+            appId: "1:731552517830:web:10447552198f5af07c91c7",
+            measurementId: "G-H5JBP27FBD"
+        };
+    
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Function to fetch the email using userId
+        async function fetchUserEmail(userId) {
+            const userDocRef = doc(db, 'users', userId);
+            const userDoc = await getDoc(userDocRef);
+
+            if (userDoc.exists()) {
+                return userDoc.data().email;
+            } else {
+                console.error('No such user!');
+                return 'Email not available';
+            }
+        }
+
+        // Function to handle like button click
+        async function handleLike(productId, userId) {
+            const userRef = doc(db, 'users', userId);
+            const productRef = doc(db, 'products', productId);
+
+            const userDoc = await getDoc(userRef);
+            const userLikes = userDoc.data().liked || [];
+            const productDoc = await getDoc(productRef);
+            const productData = productDoc.data();
+            let liked = false;
+
+            if (userLikes.includes(productId)) {
+                // Unlike
+                liked = true;
+                userLikes.splice(userLikes.indexOf(productId), 1);
+                productData.likes -= 1;
+            } else {
+                // Like
+                liked = false;
+                userLikes.push(productId);
+                productData.likes = (productData.likes || 0) + 1;
+            }
+
+            await updateDoc(userRef, { liked: userLikes });
+            await updateDoc(productRef, { likes: productData.likes });
+
+            return liked;
+        }
+
+        // Function to show the popup with product details
+        async function showPopup(productData, userEmail, productId) {
+            const popup = document.getElementById('popup');
+            const popupContent = document.querySelector('.popup-content');
+            const user = auth.currentUser;
+
+            // Fetch user document to determine if the product is liked by the user
+            let userDoc = null;
+            if (user) {
+                const userDocRef = doc(db, 'users', user.uid);
+                userDoc = await getDoc(userDocRef);
+            }
+
+            popupContent.innerHTML = `
+                <img src="${productData.photoURL || 'https://via.placeholder.com/200'}" alt="${productData.name}">
+                <p><strong>Name:</strong> ${productData.name}</p>
+                <p><strong>Description:</strong> ${productData.description}</p>
+                <p><strong>Category:</strong> ${productData.category}</p>
+                <p><strong>Price:</strong> $${productData.price.toFixed(2)}</p>
+                <p><strong>Posted on:</strong> ${new Date(productData.timestamp).toLocaleDateString()}</p>
+                <p><strong>Email:</strong> ${userEmail}</p>
+                ${productData.type === 'auction' ? `
+                    <p><strong>Start Date & Time:</strong> ${new Date(productData.startdaytime).toLocaleString()}</p>
+                    <p><strong>End Date & Time:</strong> ${new Date(productData.enddaytime).toLocaleString()}</p>
+                    <button>Discuss Auction</button>
+                ` : productData.type === 'customer-protection' ? `
+                    <button>Protected Chat</button>
+                    <button>Add to Cart</button>
+                ` : `
+                    <button>Chat</button>
+                    <button>Make Offer</button>
+                `}
+                <button class="like-button ${userDoc && userDoc.data().liked.includes(productId) ? 'liked' : ''}" data-product-id="${productId}">
+                    <i class="fa-solid fa-heart"></i> <span class="like-count">${productData.likes || 0}</span>
+                </button>
+            `;
+
+            popup.style.display = 'block';
+
+            // Handle like button click inside the popup
+            document.querySelector('.like-button').addEventListener('click', async (event) => {
+                const button = event.target.closest('button');
+                const productId = button.getAttribute('data-product-id');
+                const user = auth.currentUser;
+
+                if (user) {
+                    const liked = await handleLike(productId, user.uid);
+                    const likeCountElement = button.querySelector('.like-count');
+                    let likeCount = parseInt(likeCountElement.textContent);
+
+                    likeCountElement.textContent = liked ? likeCount - 1 : likeCount + 1;
+                    button.classList.toggle('liked', !liked);
+                }
+            });
+        }
+
+        // Function to close the popup
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+
+        document.querySelector('.close-popup').addEventListener('click', closePopup);
+
+        // Close popup when clicking outside of it
+        window.addEventListener('click', (event) => {
+            const popup = document.getElementById('popup');
+            if (event.target === popup) {
+                popup.style.display = 'none';
+            }
+        });
+
+        // Fetch and display liked products for the logged-in user
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userId = user.uid;
+                const userDocRef = doc(db, 'users', userId);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    const likedProductIds = userDoc.data().liked || [];
+
+                    if (likedProductIds.length > 0) {
+                        const productsQuery = query(collection(db, 'products'), where('__name__', 'in', likedProductIds));
+                        const querySnapshot = await getDocs(productsQuery);
+
+                        const likedProductsContainer = document.getElementById('liked');
+
+                        querySnapshot.forEach(async (doc) => {
+                            const productData = doc.data();
+                            const productId = doc.id;
+
+                            const userEmail = await fetchUserEmail(productData.userId);
+
+                            const productCard = document.createElement('div');
+                            productCard.classList.add('product-card');
+                            productCard.innerHTML = `
+                                <img src="${productData.photoURL || 'https://via.placeholder.com/150'}" alt="${productData.name}">
+                                <div class="product-details">
+                                    <p><strong>Name:</strong> ${productData.name}</p>
+                                    <p><strong>Description:</strong> ${productData.description}</p>
+                                    <p><strong>Category:</strong> ${productData.category}</p>
+                                    <p><strong>Price:</strong> $${productData.price.toFixed(2)}</p>
+                                    <p><strong>Posted on:</strong> ${new Date(productData.timestamp).toLocaleDateString()}</p>
+                                    <p><strong>Email:</strong> ${userEmail}</p>
+                                    ${productData.type === 'auction' ? `
+                                        <p><strong>Start Date & Time:</strong> ${new Date(productData.startdaytime).toLocaleString()}</p>
+                                        <p><strong>End Date & Time:</strong> ${new Date(productData.enddaytime).toLocaleString()}</p>
+                                        <button>Discuss Auction</button>
+                                    ` : productData.type === 'customer-protection' ? `
+                                        <button>Protected Chat</button>
+                                        <button>Add to Cart</button>
+                                    ` : `
+                                        <button>Chat</button>
+                                        <button>Make Offer</button>
+                                    `}
+                                    <button class="like-button ${userDoc.data().liked.includes(productId) ? 'liked' : ''}" data-product-id="${productId}">
+                                        <i class="fa-solid fa-heart"></i> <span class="like-count">${productData.likes || 0}</span>
+                                    </button>
+                                </div>
+                            `;
+
+                            productCard.addEventListener('click', () => {
+                                showPopup(productData, userEmail, productId);
+                            });
+
+                            likedProductsContainer.appendChild(productCard);
+                        });
+                    } else {
+                        document.getElementById('liked').innerHTML = '<p>No liked products found.</p>';
+                    }
+                }
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+
+</html>

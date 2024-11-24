@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Listings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #1f1f1f;
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            background-color: transparent;
+            color: #ff4081;
+            border: 1px solid #ff4081;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #ff4081;
+            color: #fff;
+        }
+
+        main {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .product-card {
+            background-color: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: border 0.3s ease;
+            position: relative;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .product-card:hover {
+            border-color: #ff4081;
+        }
+
+        .product-details {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .product-details p {
+            margin: 0.2rem 0;
+        }
+
+        .product-card img {
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 1rem;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #1e1e1e;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .popup img {
+            max-width: 100%;
+            max-height: 200px;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .popup-content {
+            color: #e0e0e0;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ff4081;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 50%;
+            font-size: 1rem;
+        }
+
+        .popup button {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: transparent;
+            color: #ff4081;
+            border: 1px solid #ff4081;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .popup button:hover {
+            background-color: #ff4081;
+            color: #fff;
+        }
+    </style>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+            authDomain: "projj-7fa1d.firebaseapp.com",
+            projectId: "projj-7fa1d",
+            storageBucket: "projj-7fa1d.appspot.com",
+            messagingSenderId: "731552517830",
+            appId: "1:731552517830:web:10447552198f5af07c91c7",
+            measurementId: "G-H5JBP27FBD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Function to fetch the email using userId
+        async function fetchUserEmail(userId) {
+            const userDocRef = doc(db, 'users', userId);
+            const userDoc = await getDoc(userDocRef);
+
+            if (userDoc.exists()) {
+                return userDoc.data().email;
+            } else {
+                console.error('No such user!');
+                return 'Email not available';
+            }
+        }
+
+        // Function to toggle the like state of a product
+        async function toggleLike(productId, currentLikes) {
+            const user = auth.currentUser;
+            if (!user) {
+                alert('You must be logged in to like a product.');
+                return;
+            }
+
+            const productDocRef = doc(db, 'products', productId);
+            const productDoc = await getDoc(productDocRef);
+
+            if (productDoc.exists()) {
+                const likesArray = productDoc.data().likesArray || [];
+                const userHasLiked = likesArray.includes(user.uid);
+
+                if (userHasLiked) {
+                    likesArray.splice(likesArray.indexOf(user.uid), 1);
+                    currentLikes--;
+                } else {
+                    likesArray.push(user.uid);
+                    currentLikes++;
+                }
+
+                await updateDoc(productDocRef, {
+                    likesArray: likesArray,
+                    likes: currentLikes
+                });
+
+                document.getElementById(`like-icon-${productId}`).style.color = userHasLiked ? '#e0e0e0' : '#ff4081';
+                document.getElementById(`like-count-${productId}`).textContent = currentLikes;
+            } else {
+                console.error('No such document!');
+            }
+        }
+
+        // Check authentication state
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = 'unauthorized.html';
+            } else {
+                const userId = user.uid;
+                const productsRef = collection(db, "products");
+                const q = query(productsRef, where("userId", "==", userId));
+                const querySnapshot = await getDocs(q);
+
+                const productList = document.getElementById('product-list');
+
+                querySnapshot.forEach(async (doc) => {
+                    const productData = doc.data();
+                    productData.id = doc.id; // Add document ID to the product data
+                    const userEmail = await fetchUserEmail(productData.userId);  // Fetch the user's email
+
+                    const isLiked = productData.likesArray ? productData.likesArray.includes(userId) : false;
+
+                    const productCard = document.createElement('div');
+                    productCard.classList.add('product-card');
+                    productCard.innerHTML = `
+                        <img src="${productData.photoURL}" alt="${productData.name}">
+                        <div class="product-details">
+                            <p><strong>Name:</strong> ${productData.name}</p>
+                            <p><strong>Type:</strong> ${productData.type}</p>
+                            <p><strong>Category:</strong> ${productData.category}</p>
+                            <p><strong>Price:</strong> $${productData.price.toFixed(2)}</p>
+                            <p><strong>Posted on:</strong> ${new Date(productData.timestamp).toLocaleDateString()}</p>
+                            <i class="fa${isLiked ? 's' : 'r'} fa-heart" id="like-icon-${doc.id}" onclick="toggleLike('${doc.id}', ${productData.likes || 0})" style="color: ${isLiked ? '#ff4081' : '#e0e0e0'}; cursor: pointer;"></i>
+                            <p><strong>Likes:</strong> <span id="like-count-${doc.id}">${productData.likes || 0}</span></p>
+                        </div>
+                    `;
+
+                    productCard.addEventListener('click', () => {
+                        showPopup(productData, userEmail);
+                    });
+
+                    productList.appendChild(productCard);
+                });
+            }
+        });
+
+        // Function to show the popup with product details
+        function showPopup(productData, userEmail) {
+            const popup = document.getElementById('popup');
+            const popupContent = document.getElementById('popup-content');
+
+            // Ensure productData.timestamp is handled properly
+            let formattedTimestamp;
+            if (productData.timestamp && productData.timestamp.toDate) {
+                // Firestore Timestamp object
+                formattedTimestamp = productData.timestamp.toDate().toLocaleDateString();
+            } else if (productData.timestamp instanceof Date) {
+                // JavaScript Date object
+                formattedTimestamp = productData.timestamp.toLocaleDateString();
+            } else if (typeof productData.timestamp === 'string') {
+                // String representation of date
+                formattedTimestamp = new Date(productData.timestamp).toLocaleDateString();
+            } else {
+                // Unknown or missing timestamp
+                formattedTimestamp = 'Unknown date';
+            }
+
+            popupContent.innerHTML = `
+                <button class="close-popup" onclick="closePopup()">&times;</button>
+                <img src="${productData.photoURL}" alt="${productData.name}">
+                <div class="popup-content">
+                    <p><strong>Name:</strong> ${productData.name}</p>
+                    <p><strong>Description:</strong> ${productData.description}</p>
+                    <p><strong>Category:</strong> ${productData.category}</p>
+                    <p><strong>Price:</strong> $${productData.price.toFixed(2)}</p>
+                    <p><strong>Posted on:</strong> ${formattedTimestamp}</p>
+                    <p><strong>Posted by:</strong> ${userEmail}</p>
+            `;
+
+            if (productData.type === 'Auction') {
+                popupContent.innerHTML += `
+                    <p><strong>Start Time:</strong> ${new Date(productData.startdaytime).toLocaleString()}</p>
+                    <p><strong>End Time:</strong> ${new Date(productData.enddaytime).toLocaleString()}</p>
+                    <button>Discuss Auction</button>
+                `;
+            } else if (productData.type === 'Customer Protection') {
+                popupContent.innerHTML += `
+                    <button>Protected Chat</button>
+                    <button>Add to Cart</button>
+                `;
+            } else {
+                popupContent.innerHTML += `
+                    <button>Chat</button>
+                    <button>Make Offer</button>
+                `;
+            }
+
+            // Check if the current user is the poster
+            if (productData.userId === auth.currentUser.uid) {
+                popupContent.innerHTML += `
+                    <button class="delete-button">Delete</button>
+                `;
+                document.querySelector('.delete-button').addEventListener('click', () => {
+                    deleteProduct(productData.id);
+                });
+            }
+
+            popup.style.display = 'block';
+        }
+
+        // Function to close the popup
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+
+        // Event listener to close the popup when clicking outside of it
+        window.addEventListener('click', (event) => {
+            if (event.target === document.getElementById('popup')) {
+                closePopup();
+            }
+        });
+
+        // Function to delete a product
+        async function deleteProduct(productId) {
+            const productDocRef = doc(db, 'products', productId);
+            await deleteDoc(productDocRef);
+            alert('Product deleted');
+            window.location.reload(); // Refresh the page to reflect the changes
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <span class="logo">My Listings</span>
+        <button class="back-button" onclick="window.location.href='me.html'">Back</button>
+    </header>
+    <main>
+        <div id="product-list"></div>
+    </main>
+    <div id="popup" class="popup">
+        <div id="popup-content"></div>
+    </div>
+</body>
+</html>

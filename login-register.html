@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login or Register</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text color */
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .welcome {
+            font-size: 3rem; /* Larger font size */
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .welcome i {
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+
+        .welcome:hover {
+            color: #ff4081; /* Neon pink color */
+            transform: scale(1.1); /* Enlarge on hover */
+        }
+
+        .welcome::after {
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #ff4081; /* Neon pink underline color */
+            transition: width 0.3s ease, left 0.3s ease;
+            z-index: 1;
+        }
+
+        .welcome:hover::after {
+            width: 100%;
+            left: 0;
+        }
+
+        .button {
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #333; /* Dark background for buttons */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #e0e0e0; /* Light text color */
+            position: relative; /* For pseudo-element positioning */
+            transition: background-color 0.3s, transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem; /* Button text size */
+        }
+
+        .button i {
+            margin-right: 10px;
+            font-size: 1.5rem; /* Larger icon size */
+        }
+
+        .button:hover {
+            background-color: #444; /* Slightly lighter background on hover */
+            transform: scale(1.05);
+        }
+
+        .button::after {
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #ff4081; /* Neon pink underline color */
+            transition: width 0.3s ease, left 0.3s ease;
+            z-index: 1;
+        }
+
+        .button:hover::after {
+            width: 100%;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="welcome">
+            <i class="fas fa-smile"></i>
+            Welcome
+        </div>
+        <button class="button" onclick="window.location.href='register.html'">
+            <i class="fas fa-user-plus"></i> Register/Sign Up
+        </button>
+        <button class="button" onclick="window.location.href='login.html'">
+            <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text color */
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-color: #1f1f1f; /* Darker header */
+        }
+
+        .profile-header .profile-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #333;
+            margin-right: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .profile-header .profile-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-header .profile-photo:hover {
+            transform: scale(1.05);
+        }
+
+        .profile-header .profile-photo input[type="file"] {
+            display: none;
+        }
+
+        .profile-header .profile-photo:hover::before {
+            content: 'Change Photo';
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+        }
+
+        .profile-header .profile-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-header .profile-info .user-id {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            transition: color 0.3s;
+        }
+
+        .profile-header .profile-info .user-id:hover {
+            color: #ff4081; /* Neon pink color */
+            text-decoration: underline;
+        }
+
+        .profile-header .profile-info .rating {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            transition: color 0.3s;
+        }
+
+        .profile-header .profile-info .rating i {
+            color: #ffbf00; /* Gold color for stars */
+            margin-right: 5px;
+        }
+
+        .profile-header .profile-info .rating:hover {
+            color: #ff4081; /* Neon pink color */
+        }
+
+        .profile-header .profile-info .about-section {
+            background-color: #1f1f1f; /* Dark background for about section */
+            padding: 15px;
+            border-radius: 5px;
+            color: #e0e0e0; /* Light text color */
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .profile-header .profile-info .about-section textarea {
+            width: 100%;
+            height: 100px;
+            border: none;
+            background: transparent;
+            color: #e0e0e0;
+            resize: none;
+            overflow: hidden;
+            font-size: 1rem;
+        }
+
+        .profile-header .profile-info .about-section textarea:disabled {
+            cursor: default;
+        }
+
+        .profile-header .profile-info .buttons {
+            display: flex;
+            justify-content: center; /* Center buttons horizontally */
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .profile-header .profile-info .buttons button {
+            background-color: transparent;
+            border: none;
+            color: #e0e0e0;
+            cursor: pointer;
+            font-size: 1rem;
+            position: relative; /* For pseudo-element positioning */
+            overflow: hidden; /* Ensure underline stays within button */
+        }
+
+        .profile-header .profile-info .buttons button::after {
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #ff4081; /* Neon pink underline color */
+            transition: width 0.3s ease, left 0.3s ease;
+            z-index: 1;
+        }
+
+        .profile-header .profile-info .buttons button:hover::after {
+            width: 100%;
+            left: 0;
+        }
+
+        .profile-header .profile-info .buttons #me::after {
+            width: 100%; /* Underline only for the active button */
+            left: 0;
+        }
+
+        footer {
+            background-color: #1f1f1f; /* Darker footer */
+            padding: 10px 0;
+            position: fixed; /* Fixes footer to the bottom */
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center; /* Centers buttons horizontally */
+            align-items: center; /* Centers buttons vertically */
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-button {
+            padding: 10px 20px;
+            background-color: transparent; /* Transparent buttons */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #e0e0e0; /* Light text color */
+            transition: transform 0.3s;
+            position: relative; /* For pseudo-element positioning */
+        }
+
+        .nav-button i {
+            margin-right: 8px; /* Spacing between icon and text */
+            font-size: 1.2rem; /* Icon size */
+        }
+
+        .nav-button:hover {
+            transform: scale(1.05);
+            background-color: #2a2a2a; /* Slightly darken on hover */
+        }
+
+        .nav-button::after {
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #ff4081; /* Neon pink underline color */
+            transition: width 0.3s ease, left 0.3s ease;
+            z-index: 1;
+        }
+
+        .nav-button:hover::after {
+            width: 100%;
+            left: 0;
+        }
+
+        #me::after {
+            width: 100%; /* Underline for Me button */
+            left: 0;
+        }
+        .modal-content {
+            background-color: #1f1f1f;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 5px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .review-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .review-controls select, .review-controls input {
+            padding: 5px;
+            border-radius: 3px;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #444;
+        }
+
+        .review-card {
+            background-color: #2a2a2a;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+        }
+
+        .review-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .review-card h3 {
+            margin-top: 0;
+            color: #ff4081;
+        }
+
+        .review-card p {
+            margin: 5px 0;
+        }
+
+        .star-rating {
+            color: #ffbf00;
+            font-size: 1.2em;
+        }
+        .rating .fas.fa-star {
+            color: #ffbf00; /* Gold color for filled stars */
+        }
+        .rating .far.fa-star {
+            color: #ffbf00; /* Gold color for empty stars */
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-header">
+        <label class="profile-photo" for="photo-upload">
+            <img src="https://via.placeholder.com/100" alt="Profile Photo" id="profile-photo">
+            <input type="file" id="photo-upload" accept="image/*" onchange="displayPhoto(event)">
+        </label>
+        <div class="profile-info">
+            <div class="user-id" id="user-email"></div>
+            
+            <div class="profile-info">
+                <div class="user-id" id="user-email"></div>
+                <div class="rating" id="user-rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <span id="average-rating">0</span>
+                    (<span id="review-count">0</span> Reviews)
+                </div>
+            <div class="about-section">
+                <textarea id="about-input" disabled></textarea> <!-- Read-only About section -->
+            </div>
+            <div class="buttons">
+                <button id="my-listings"><i class="fas fa-box"></i> My Listings</button>
+                <button id="reviews"><i class="fas fa-star"></i> Reviews</button>
+                <button id="liked"><i class="fas fa-heart"></i> Liked</button>
+                <button id="insights"><i class="fas fa-chart-line"></i> Insights</button>
+            </div>
+        </div>
+    </div>
+    <div id="reviewsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Reviews</h2>
+            <div class="review-controls">
+                <select id="sortReviews">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="highestRating">Highest Rating</option>
+                    <option value="lowestRating">Lowest Rating</option>
+                </select>
+                <select id="filterReviews">
+                    <option value="all">All Reviews</option>
+                    <option value="asBuyer">As Buyer</option>
+                    <option value="asSeller">As Seller</option>
+                </select>
+                <input type="text" id="searchReviews" placeholder="Search reviews...">
+            </div>
+            <div id="reviewsContainer"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="nav-buttons">
+            <button class="nav-button" id="home" onclick="window.location.href='home.html'">
+                <i class="fas fa-home"></i> Home
+            </button>
+            <button class="nav-button" id="sell" onclick="window.location.href='sell.html'">
+                <i class="fas fa-plus"></i> Sell
+            </button>
+            <button class="nav-button" id="me" onclick="window.location.href='me.html'">
+                <i class="fas fa-user"></i> Me
+            </button>
+            <button class="nav-button" id="settings" onclick="window.location.href='settings.html'">
+                <i class="fas fa-cog"></i> Settings
+            </button>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+        import { 
+    getFirestore, 
+    doc, 
+    getDoc, 
+    updateDoc, 
+    collection, 
+    query, 
+    where, 
+    getDocs, 
+    orderBy 
+} from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-storage.js";
+    
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+            authDomain: "projj-7fa1d.firebaseapp.com",
+            projectId: "projj-7fa1d",
+            storageBucket: "projj-7fa1d.appspot.com",
+            messagingSenderId: "731552517830",
+            appId: "1:731552517830:web:10447552198f5af07c91c7",
+            measurementId: "G-H5JBP27FBD"
+        };
+    
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+    
+        // Function to get userId from URL parameters
+        function getUserIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('userId');
+        }
+        // Event listeners for sorting, filtering, and searching
+document.getElementById('sortReviews').addEventListener('change', (e) => {
+    const sortedReviews = sortReviews([...allReviews], e.target.value);
+    displayReviews(sortedReviews);
+});
+
+document.getElementById('filterReviews').addEventListener('change', (e) => {
+    const filteredReviews = filterReviews(allReviews, e.target.value);
+    displayReviews(filteredReviews);
+});
+
+document.getElementById('searchReviews').addEventListener('input', (e) => {
+    const searchedReviews = searchReviews(allReviews, e.target.value);
+    displayReviews(searchedReviews);
+});
+
+// Modal functionality
+const modal = document.getElementById('reviewsModal');
+const reviewsButton = document.getElementById('reviews');
+const closeButton = document.getElementsByClassName('close')[0];
+
+reviewsButton.onclick = () => {
+    modal.style.display = 'block';
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+        currentUserId = currentUser.uid;
+        fetchReviews(currentUser.uid);
+    }
+};
+
+closeButton.onclick = () => {
+    modal.style.display = 'none';
+};
+
+window.onclick = (event) => {
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+};
+
+        // Check authentication state
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const urlUserId = getUserIdFromUrl();
+                const userId = urlUserId || user.uid;  // Use URL userId if present, otherwise default to logged-in user
+                updateUserRating(user.uid);
+                try {
+                    const userDocRef = doc(db, 'users', userId);
+                    const userDoc = await getDoc(userDocRef);
+    
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+    
+                        // Display the user's profile photo and email
+                        const profilePhoto = document.getElementById('profile-photo');
+                        const userEmailElement = document.getElementById('user-email');
+                        const aboutInput = document.getElementById('about-input');
+    
+                        if (userData.profilePhotoUrl) {
+                            profilePhoto.src = userData.profilePhotoUrl;
+                        } else {
+                            profilePhoto.src = 'https://via.placeholder.com/100'; // Fallback image if no photo is available
+                        }
+    
+                        userEmailElement.textContent = userData.email;
+                        aboutInput.value = userData.about || '';
+    
+                        // Disable editing of the about section if viewing another user's profile
+                        if (urlUserId) {
+                            aboutInput.disabled = true;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching user data:', error);
+                }
+            } else {
+                // Redirect to login if no user is logged in
+                window.location.href = 'unauthorized.html';
+            }
+        });
+    
+        // Handle profile photo upload
+        function displayPhoto(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('profile-photo').src = e.target.result;
+                // Upload the new photo to Firebase Storage
+                if (file) {
+                    const storageRef = ref(storage, 'profile_photos/' + auth.currentUser.uid);
+                    uploadBytes(storageRef, file).then(() => {
+                        getDownloadURL(storageRef).then((url) => {
+                            // Update Firestore with the new photo URL
+                            const userDocRef = doc(db, 'users', auth.currentUser.uid);
+                            updateDoc(userDocRef, { profilePhotoUrl: url });
+                        });
+                    });
+                }
+            }
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function updateUserRating(userId) {
+            const db = getFirestore();
+            const reviewsAsSellerQuery = query(collection(db, 'reviews'), where('sellerId', '==', userId));
+            const reviewsAsBuyerQuery = query(collection(db, 'reviews'), where('buyerId', '==', userId));
+
+            try {
+                const [sellerReviewsSnapshot, buyerReviewsSnapshot] = await Promise.all([
+                    getDocs(reviewsAsSellerQuery),
+                    getDocs(reviewsAsBuyerQuery)
+                ]);
+
+                let totalRating = 0;
+                let reviewCount = 0;
+
+                sellerReviewsSnapshot.forEach(doc => {
+                    const rating = doc.data().buyerRatesSeller;
+                    if (rating) {
+                        totalRating += rating;
+                        reviewCount++;
+                    }
+                });
+
+                buyerReviewsSnapshot.forEach(doc => {
+                    const rating = doc.data().sellerRatesBuyer;
+                    if (rating) {
+                        totalRating += rating;
+                        reviewCount++;
+                    }
+                });
+
+                const averageRating = reviewCount > 0 ? totalRating / reviewCount : 0;
+                
+                // Update the DOM
+                const averageRatingElement = document.getElementById('average-rating');
+                const reviewCountElement = document.getElementById('review-count');
+                const starElements = document.querySelectorAll('#user-rating .fa-star');
+
+                averageRatingElement.textContent = averageRating.toFixed(1);
+                reviewCountElement.textContent = reviewCount;
+
+                // Update star display
+                starElements.forEach((star, index) => {
+                    if (index < Math.round(averageRating)) {
+                        star.className = 'fas fa-star';
+                    } else {
+                        star.className = 'far fa-star';
+                    }
+                });
+            } catch (error) {
+                console.error("Error fetching reviews: ", error);
+            }
+        }
+        let allReviews = [];
+        let currentUserId = '';
+
+        // Function to fetch and display reviews
+        async function fetchReviews(userId) {
+    const reviewsQuery = query(
+        collection(db, 'reviews'),
+        where('sellerId', '==', userId)
+    );
+
+    const buyerReviewsQuery = query(
+        collection(db, 'reviews'),
+        where('buyerId', '==', userId)
+    );
+
+    try {
+        const [sellerReviewsSnapshot, buyerReviewsSnapshot] = await Promise.all([
+            getDocs(reviewsQuery),
+            getDocs(buyerReviewsQuery)
+        ]);
+
+        allReviews = [...sellerReviewsSnapshot.docs, ...buyerReviewsSnapshot.docs].map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                timestamp: data.timestamp ? data.timestamp : { seconds: Date.now() / 1000 } // Fallback to current time if timestamp is missing
+            };
+        });
+
+        await Promise.all(allReviews.map(async (review) => {
+            const productDoc = await getDoc(doc(db, 'products', review.productId));
+            const productData = productDoc.exists() ? productDoc.data() : null;
+            review.productDetails = productData;
+
+            const otherUserId = userId === review.sellerId ? review.buyerId : review.sellerId;
+            const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+            review.otherUserEmail = otherUserDoc.exists() ? otherUserDoc.data().email : 'Unknown User';
+        }));
+
+        displayReviews(allReviews);
+    } catch (error) {
+        console.error('Error fetching reviews:', error);
+        document.getElementById('reviewsContainer').innerHTML = '<p>Error loading reviews. Please try again later.</p>';
+    }
+}
+
+function displayReviews(reviews) {
+    const reviewsContainer = document.getElementById('reviewsContainer');
+    reviewsContainer.innerHTML = '';
+
+    reviews.forEach(review => {
+        const reviewCard = document.createElement('div');
+        reviewCard.className = 'review-card';
+        const stars = '★'.repeat(Math.round(currentUserId === review.buyerId ? review.sellerRatesBuyer : review.buyerRatesSeller)) + 
+                      '☆'.repeat(5 - Math.round(currentUserId === review.buyerId ? review.sellerRatesBuyer : review.buyerRatesSeller));
+        
+        // Use a default date if timestamp is missing or invalid
+        const reviewDate = review.timestamp && review.timestamp.seconds
+            ? new Date(review.timestamp.seconds * 1000).toLocaleDateString()
+            : 'Date not available';
+        
+        reviewCard.innerHTML = `
+            <h3>${review.productDetails ? review.productDetails.name : 'Unknown Product'}</h3>
+            <p>Type: ${review.productDetails ? review.productDetails.type : 'N/A'}</p>
+            <p>Price: $${review.productDetails ? review.productDetails.price : 'N/A'}</p>
+            <p>${currentUserId === review.buyerId ? 'Seller' : 'Buyer'}: ${review.otherUserEmail}</p>
+            <p>Review: ${currentUserId === review.buyerId ? review.sellerReviewsBuyer : review.buyerReviewsSeller}</p>
+            <p class="star-rating">Rating: ${stars}</p>
+            <p>Date: ${reviewDate}</p>
+        `;
+        reviewsContainer.appendChild(reviewCard);
+    });
+
+    if (reviews.length === 0) {
+        reviewsContainer.innerHTML = '<p>No reviews found.</p>';
+    }
+}
+
+        function sortReviews(reviews, sortBy) {
+            switch (sortBy) {
+                case 'newest':
+                    return reviews.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
+                case 'oldest':
+                    return reviews.sort((a, b) => a.timestamp.seconds - b.timestamp.seconds);
+                case 'highestRating':
+                    return reviews.sort((a, b) => {
+                        const ratingA = currentUserId === a.buyerId ? a.sellerRatesBuyer : a.buyerRatesSeller;
+                        const ratingB = currentUserId === b.buyerId ? b.sellerRatesBuyer : b.buyerRatesSeller;
+                        return ratingB - ratingA;
+                    });
+                case 'lowestRating':
+                    return reviews.sort((a, b) => {
+                        const ratingA = currentUserId === a.buyerId ? a.sellerRatesBuyer : a.buyerRatesSeller;
+                        const ratingB = currentUserId === b.buyerId ? b.sellerRatesBuyer : b.buyerRatesSeller;
+                        return ratingA - ratingB;
+                    });
+                default:
+                    return reviews;
+            }
+        }
+
+        function filterReviews(reviews, filterBy) {
+            switch (filterBy) {
+                case 'asBuyer':
+                    return reviews.filter(review => review.buyerId === currentUserId);
+                case 'asSeller':
+                    return reviews.filter(review => review.sellerId === currentUserId);
+                default:
+                    return reviews;
+            }
+        }
+
+        function searchReviews(reviews, searchTerm) {
+            searchTerm = searchTerm.toLowerCase();
+            return reviews.filter(review => 
+                (review.productDetails && review.productDetails.name.toLowerCase().includes(searchTerm)) ||
+                (review.productDetails && review.productDetails.type.toLowerCase().includes(searchTerm)) ||
+                review.otherUserEmail.toLowerCase().includes(searchTerm) ||
+                (currentUserId === review.buyerId ? review.sellerReviewsBuyer : review.buyerReviewsSeller).toLowerCase().includes(searchTerm)
+            );
+        }
+
+        // Function to navigate with authentication check
+        async function navigateWithAuth(url) {
+            const user = auth.currentUser;
+            if (user) {
+                // User is authenticated
+                window.location.href = url;
+            } else {
+                // User is not authenticated
+                window.location.href = 'unauthorized.html';
+            }
+        }
+    
+        // Add event listener for the "My Listings" button
+        document.getElementById('my-listings').addEventListener('click', () => {
+            navigateWithAuth('user-products.html'); // Redirect to the user products page with auth check
+        });
+    
+        // Add event listener for the "Liked" button
+        document.getElementById('liked').addEventListener('click', () => {
+            navigateWithAuth('liked.html'); // Redirect to the liked page with auth check
+        });
+    </script>
+    

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Chat</title>
+    <style>
+        /* Styles remain unchanged */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-container {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+        .back-button {
+            background-color: #ff69b4;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            align-self: flex-start;
+            font-size: 16px;
+        }
+        .product-card {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #333333;
+            background-color: #2c2c2c;
+        }
+        .product-card img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 15px;
+        }
+        .product-details {
+            flex-grow: 1;
+        }
+        .product-details p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        .message-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .message-container.sent {
+            justify-content: flex-end;
+        }
+        .message-container.received {
+            justify-content: flex-start;
+        }
+        .profile-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 10px;
+            object-fit: cover;
+        }
+        .user-email {
+    font-size: 12px;
+    color: cyan; /* Cyan color for the email */
+    text-decoration: underline; /* Underline the email */
+    margin-bottom: 0; /* Space between email and message */
+}
+        .message {
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 75%;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .message.sent {
+            background-color: #ff69b4;
+            color: white;
+            align-self: flex-end;
+        }
+        .message.received {
+            background-color: #333333;
+            color: #ffffff;
+            align-self: flex-start;
+        }
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #333333;
+            background-color: #2c2c2c;
+        }
+        .chat-input input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #555555;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-right: 10px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        .chat-input button {
+            background-color: #ff69b4;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .offer-buttons {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            border-top: 1px solid #333333;
+            background-color: #2c2c2c;
+        }
+        .offer-buttons button {
+            margin: 0 10px;
+            background-color: #ff69b4;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .reserve-button {
+            background-color: #ff69b4;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .reserve-button.reserved {
+            background-color: purple;
+        }
+        .review-container {
+            display: none;
+            padding: 15px;
+            background-color: #2c2c2c;
+            border-top: 1px solid #333333;
+        }
+        .review-container textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border: 1px solid #555555;
+            border-radius: 5px;
+        }
+        .star-rating {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .star-rating input {
+            display: none;
+        }
+        .star-rating label {
+            cursor: pointer;
+            font-size: 30px;
+            color: #ddd;
+        }
+        .star-rating label:before {
+            content: '\2605';
+        }
+        .star-rating input:checked ~ label {
+            color: #ffdb58;
+        }
+        .submit-review {
+            background-color: #ff69b4;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .review-display {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #2c2c2c;
+            border-radius: 5px;
+        }
+        .review-display h4 {
+            margin-top: 0;
+        }
+        .star-display {
+            color: gold;
+        }
+        .page-container {
+            display: flex;
+            justify-content: center;
+            align-items: start;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        .review-section {
+            width: 300px;
+            margin-right: 20px;
+        }
+
+        .chat-container {
+            width: 600px;
+        }
+
+        .review-container {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .review-display {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Back Button -->
+        <button class="back-button" onclick="window.location.href='home.html'">Back to Home</button>
+        
+        <!-- Product Card -->
+        <div id="product-card" class="product-card"></div>
+
+        <!-- Chat Messages -->
+        <div id="chat-messages" class="chat-messages"></div>
+
+        <!-- Offer Buttons -->
+        <div class="offer-buttons">
+            <button id="make-offer-button" style="display: none;">Make Offer</button>
+            <button id="accept-offer-button" style="display: none;" disabled>Accept Offer</button>
+            <button id="reserve-button" class="reserve-button" style="display: none;">Reserve</button>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="chat-input">
+            <input type="text" id="message-input" placeholder="Type your message here...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+    <div class="page-container">
+        <div class="review-section">
+            <div id="review-container" class="review-container">
+                <h3>Leave a Review</h3>
+                <textarea id="review-text" rows="4" placeholder="Write your review here..."></textarea>
+                <div class="star-rating">
+                    <input type="radio" id="star5" name="rating" value="5" /><label for="star5"></label>
+                    <input type="radio" id="star4" name="rating" value="4" /><label for="star4"></label>
+                    <input type="radio" id="star3" name="rating" value="3" /><label for="star3"></label>
+                    <input type="radio" id="star2" name="rating" value="2" /><label for="star2"></label>
+                    <input type="radio" id="star1" name="rating" value="1" /><label for="star1"></label>
+                </div>
+                <button id="submit-review" class="submit-review">Submit Review</button>
+                <div id="error-message" class="error-message"></div>
+            </div>
+
+            <!-- Review Display -->
+            <div id="review-display" class="review-display"></div>
+        </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, orderBy, addDoc, onSnapshot, updateDoc, limit, getDocs } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+        import { where } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+            authDomain: "projj-7fa1d.firebaseapp.com",
+            projectId: "projj-7fa1d",
+            storageBucket: "projj-7fa1d.appspot.com",
+            messagingSenderId: "731552517830",
+            appId: "1:731552517830:web:10447552198f5af07c91c7",
+            measurementId: "G-H5JBP27FBD"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('productId');
+        const chatId = urlParams.get('chatId');
+        const currentUserId = urlParams.get('currentUserId');
+
+        // Fetch product details
+        async function fetchProductDetails(productId) {
+            const productDocRef = doc(db, 'products', productId);
+            const productDoc = await getDoc(productDocRef);
+            if (productDoc.exists()) {
+                return productDoc.data();
+            } else {
+                console.error('Product not found!');
+                return null;
+            }
+        }
+
+        // Fetch user data
+        async function fetchUserData(userId) {
+            const userDocRef = doc(db, 'users', userId);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                return userDoc.data();
+            } else {
+                return { profilePhotoUrl: 'https://via.placeholder.com/100', email: 'Unknown' }; // Default profile photo
+            }
+        }
+// Fetch chat messages
+async function fetchChatMessages(chatId) {
+    const chatMessagesRef = collection(db, `chats/${chatId}/messages`);
+    const messagesQuery = query(chatMessagesRef, orderBy('timestamp', 'asc'));
+
+    onSnapshot(messagesQuery, async (snapshot) => {
+        const chatMessages = document.getElementById('chat-messages');
+        chatMessages.innerHTML = '';
+        for (const doc of snapshot.docs) {
+            const messageData = doc.data();
+            const messageContainer = document.createElement('div');
+            messageContainer.classList.add('message-container');
+            messageContainer.classList.add(messageData.senderId === currentUserId ? 'sent' : 'received');
+
+            const profilePhoto = document.createElement('img');
+            profilePhoto.classList.add('profile-photo');
+            
+            const userData = await fetchUserData(messageData.senderId);
+            profilePhoto.src = userData.profilePhotoUrl;
+
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.classList.add(messageData.senderId === currentUserId ? 'sent' : 'received');
+            messageElement.innerText = messageData.message;
+
+            const userEmail = document.createElement('span');
+            userEmail.classList.add('user-email');
+            userEmail.innerText = userData.email;
+
+            // Append email, profile photo, and message to the container
+            messageContainer.appendChild(profilePhoto);
+            messageContainer.appendChild(userEmail);
+            messageContainer.appendChild(messageElement);
+
+            chatMessages.appendChild(messageContainer);
+        }
+        chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to bottom
+    });
+}
+async function createReviewDocument(productId, buyerId, sellerId) {
+            try {
+                const reviewsRef = collection(db, 'reviews');
+                const docRef = await addDoc(reviewsRef, {
+                    productId: productId,
+                    buyerId: buyerId,
+                    sellerId: sellerId,
+                    sellerReviewsBuyer: '',
+                    buyerReviewsSeller: '',
+                    sellerRatesBuyer: 0,
+                    buyerRatesSeller: 0
+                });
+                console.log("Review document created with ID: ", docRef.id);
+                return docRef.id;
+            } catch (error) {
+                console.error("Error creating review document: ", error);
+                throw error;
+            }
+        }
+
+        // Modified function to update review
+        async function updateReview(productId, reviewerId, isSellerReview, review, rating) {
+    try {
+        const reviewsRef = collection(db, 'reviews');
+        const q = query(reviewsRef, where('productId', '==', productId));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+            const reviewDoc = querySnapshot.docs[0];
+            
+            let updateData = {};
+            if (isSellerReview) {
+                updateData.sellerReviewsBuyer = review;
+                updateData.sellerRatesBuyer = rating;
+            } else {
+                updateData.buyerReviewsSeller = review;
+                updateData.buyerRatesSeller = rating;
+            }
+            
+            await updateDoc(reviewDoc.ref, updateData);
+            console.log("Review updated successfully");
+            displayReviews(productId); // Refresh the displayed reviews
+        } else {
+            console.error("No review document found for productId: ", productId);
+            throw new Error("No review document found");
+        }
+    } catch (error) {
+        console.error("Error updating review: ", error);
+        throw error;
+    }
+}
+
+
+        // New function to display reviews
+        async function displayReviews(productId) {
+            try {
+                const reviewsRef = collection(db, 'reviews');
+                const q = query(reviewsRef, where('productId', '==', productId));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    const reviewDoc = querySnapshot.docs[0];
+                    const reviewData = reviewDoc.data();
+                    
+                    const reviewDisplay = document.getElementById('review-display');
+                    reviewDisplay.innerHTML = '';
+                    
+                    if (reviewData.sellerReviewsBuyer) {
+                        const sellerReview = document.createElement('div');
+                        sellerReview.innerHTML = `
+                            <h4>Seller's Review:</h4>
+                            <p>${reviewData.sellerReviewsBuyer}</p>
+                            <div class="star-display">${'★'.repeat(reviewData.sellerRatesBuyer)}</div>
+                        `;
+                        reviewDisplay.appendChild(sellerReview);
+                    }
+                    
+                    if (reviewData.buyerReviewsSeller) {
+                        const buyerReview = document.createElement('div');
+                        buyerReview.innerHTML = `
+                            <h4>Buyer's Review:</h4>
+                            <p>${reviewData.buyerReviewsSeller}</p>
+                            <div class="star-display">${'★'.repeat(reviewData.buyerRatesSeller)}</div>
+                        `;
+                        reviewDisplay.appendChild(buyerReview);
+                    }
+                }
+            } catch (error) {
+                console.error("Error displaying reviews: ", error);
+            }
+        }
+
+        // Send a chat message
+        async function sendMessage(chatId, message, senderId) {
+            const chatMessagesRef = collection(db, `chats/${chatId}/messages`);
+            await addDoc(chatMessagesRef, {
+                message: message,
+                senderId: senderId,
+                timestamp: new Date()
+            });
+        }
+
+        // Update product availability
+        async function updateProductWithBuyerDetails(productId, buyerId, availability) {
+    const productDocRef = doc(db, 'products', productId);
+    const productDoc = await getDoc(productDocRef);
+    
+    if (productDoc.exists()) {
+        await updateDoc(productDocRef, {
+            availability: availability,
+            buyerId: buyerId
+        });
+    } else {
+        console.error('Product not found!');
+    }
+}
+        // Initialize chat page
+        onAuthStateChanged(auth, async (user) => {
+    if (user && currentUserId === user.uid) {
+        const productData = await fetchProductDetails(productId);
+        const userData = await fetchUserData(currentUserId);
+        if (productData) {
+            document.getElementById('product-card').innerHTML = `
+                <img src="${productData.photoURL || 'https://via.placeholder.com/150'}" alt="${productData.name}">
+                <div class="product-details">
+                    <p><strong>Name:</strong> ${productData.name}</p>
+                    <p><strong>Type:</strong> ${productData.type}</p>
+                    <p><strong>Description:</strong> ${productData.description}</p>
+                    <p><strong>Category:</strong> ${productData.category}</p>
+                    <p><strong>Price:</strong> $${productData.price.toFixed(2)}</p>
+                    <p><strong>Posted on:</strong> ${new Date(productData.timestamp).toLocaleDateString()}</p>
+                </div>
+            `;
+            
+            await displayReviews(productId);
+
+            // Fetch and display chat messages
+            await fetchChatMessages(chatId);
+
+            // Get chat document
+            const chatDocRef = doc(db, 'chats', chatId);
+            const chatDoc = await getDoc(chatDocRef);
+            if (chatDoc.exists()) {
+                const chatData = chatDoc.data();
+                const [buyerId, sellerId] = chatData.users;
+
+                // Determine roles
+                const isBuyer = buyerId === currentUserId;
+                const isSeller = sellerId === currentUserId;
+                
+                // Show/Hide buttons based on role and status
+                if (isBuyer) {
+                    document.getElementById('make-offer-button').style.display = 'block';
+                } else if (isSeller) {
+                    document.getElementById('accept-offer-button').style.display = 'block';
+                    document.getElementById('reserve-button').style.display = 'block';
+                    
+                    // Check if the offer has been made
+                    const offerMade = chatData.offerMade || false;
+                    document.getElementById('accept-offer-button').disabled = !offerMade;
+
+                    // Check if the product is reserved
+                    const isReserved = chatData.isReserved || false;
+                    const reserveButton = document.getElementById('reserve-button');
+                    if (isReserved) {
+                        reserveButton.textContent = 'Unreserve';
+                        reserveButton.classList.add('reserved');
+                    } else {
+                        reserveButton.textContent = 'Reserve';
+                        reserveButton.classList.remove('reserved');
+                    }
+                }
+
+                // Show review container if offer is accepted
+                if (chatData.offerAccepted) {
+                    document.getElementById('review-container').style.display = 'block';
+                }
+            }
+            
+            // Handle "Make Offer" button click
+            document.getElementById('make-offer-button').addEventListener('click', async () => {
+                await sendMessage(chatId, 'Buyer has sent an offer', currentUserId);
+                const chatDocRef = doc(db, 'chats', chatId);
+                await updateDoc(chatDocRef, { offerMade: true });
+            });
+
+
+                    // Handle "Accept Offer" button click
+                    // Handle "Accept Offer" button click
+                   document.getElementById('accept-offer-button').addEventListener('click', async () => {
+                try {
+                    const chatMessagesRef = collection(db, `chats/${chatId}/messages`);
+                    const messagesQuery = query(chatMessagesRef, orderBy('timestamp', 'desc'), limit(1));
+                    const messageSnapshot = await getDocs(messagesQuery);
+
+                    let buyerId = null;
+                    messageSnapshot.forEach(doc => {
+                        const messageData = doc.data();
+                        buyerId = messageData.senderId;
+                    });
+
+                    if (buyerId) {
+                        await sendMessage(chatId, 'The seller has accepted the offer', currentUserId);
+                        await updateProductWithBuyerDetails(productId, buyerId, 'sold');
+                        document.getElementById('reserve-button').style.display = 'none';
+                        
+                        // Create review document
+                        const reviewId = await createReviewDocument(productId, buyerId, currentUserId);
+                        console.log("Created review document with ID: ", reviewId);
+                        
+                        // Update chat document to indicate offer is accepted
+                        await updateDoc(chatDocRef, { offerAccepted: true });
+                        
+                        // Show review container for both buyer and seller
+                        document.getElementById('review-container').style.display = 'block';
+                    } else {
+                        console.error('Buyer ID could not be determined from the chat messages.');
+                        showErrorMessage('Error: Could not determine buyer. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error accepting offer:', error);
+                    showErrorMessage('Error accepting offer. Please try again.');
+                }
+            });
+
+            // Handle review submission
+            document.getElementById('submit-review').addEventListener('click', async () => {
+                try {
+                    const reviewText = document.getElementById('review-text').value;
+                    const ratingElement = document.querySelector('input[name="rating"]:checked');
+                    
+                    if (!reviewText.trim()) {
+                        throw new Error("Please enter a review before submitting.");
+                    }
+                    
+                    if (!ratingElement) {
+                        throw new Error("Please select a rating before submitting.");
+                    }
+                    
+                    const rating = parseInt(ratingElement.value);
+                    
+                    const productData = await fetchProductDetails(productId);
+                    const isSellerReview = currentUserId === productData.userId;
+                    
+                    await updateReview(productId, currentUserId, isSellerReview, reviewText, rating);
+                    
+                    // Clear the review form
+                    document.getElementById('review-text').value = '';
+                    document.querySelector('input[name="rating"]:checked').checked = false;
+                    
+                    // Display updated reviews
+                    await displayReviews(productId);
+                    
+                    alert('Thank you for your review!');
+                } catch (error) {
+                    console.error('Error submitting review:', error);
+                    showErrorMessage(error.message || 'Error submitting review. Please try again.');
+                }
+            });
+
+
+
+                    // Handle "Reserve" button click
+                    document.getElementById('reserve-button').addEventListener('click', async () => {
+                        const reserveButton = document.getElementById('reserve-button');
+                        const isReserved = reserveButton.textContent === 'Unreserve';
+                        const newStatus = !isReserved;
+
+                        // Update Firestore document
+                        await updateProductWithBuyerDetails(productId, currentUserId, newStatus ? 'reserved' : 'available');
+
+
+                        // Send a message to the chat
+                        const message = newStatus ? 'The seller has reserved the product' : 'The seller has unreserved the product';
+                        await sendMessage(chatId, message, currentUserId);
+
+                        // Update button UI
+                        reserveButton.textContent = newStatus ? 'Unreserve' : 'Reserve';
+                        reserveButton.classList.toggle('reserved', newStatus);
+                    });
+
+                    // Handle message sending
+                    document.getElementById('send-button').addEventListener('click', async () => {
+                        const messageInput = document.getElementById('message-input');
+                        const message = messageInput.value.trim();
+                        if (message) {
+                            await sendMessage(chatId, message, currentUserId);
+                            messageInput.value = '';
+                        }
+                    });
+                }
+            } else {
+                window.location.href = 'unauthorized.html';
+            }
+        });
+    </script>
+</body>
+</html>

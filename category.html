@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        /* General styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #1f1f1f;
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 50%;
+            left: 1rem;
+            transform: translateY(-50%);
+            background-color: transparent;
+            color: #ff4081;
+            border: 1px solid #ff4081;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #ff4081;
+            color: #fff;
+        }
+
+        main {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .product-card {
+            background-color: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: border 0.3s ease;
+            position: relative;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .product-card:hover {
+            border-color: #ff4081;
+        }
+
+        .product-details {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .product-details p {
+            margin: 0.2rem 0;
+        }
+
+        .product-card img {
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 1rem;
+        }
+
+        .like-button {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #e0e0e0;
+        }
+
+        .like-button.liked {
+            color: #ff4081;
+        }
+
+        .like-count {
+            margin-left: 0.5rem;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #1e1e1e;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        .popup img {
+            max-width: 100%;
+            max-height: 200px;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .popup-content {
+            color: #e0e0e0;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ff4081;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 50%;
+            font-size: 1rem;
+        }
+
+        .popup button {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: transparent;
+            color: #ff4081;
+            border: 1px solid #ff4081;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .popup button:hover {
+            background-color: #ff4081;
+            color: #fff;
+        }
+        .email-button {
+    background-color: transparent;
+    border: 1px solid #e0e0e0;
+    color: #e0e0e0;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.availability-icon {
+    width: 48px;
+    height: 48px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1;
+}
+
+.sold-icon {
+    filter: hue-rotate(180deg) saturate(200%);
+}
+
+.reserved-icon {
+    filter: hue-rotate(90deg) saturate(150%);
+}
+.email-button:hover {
+    background-color: #2a2a2a;
+}
+
+    </style>
+</head>
+<body>
+    <header>
+        <button class="back-button" onclick="window.location.href='home.html'">Back</button>
+        <div class="logo">YourLogo</div>
+    </header>
+
+    <main>
+        <div id="product-list"></div>
+    </main>
+
+    <div id="popup" class="popup">
+        <button class="close-popup" onclick="closePopup()">X</button>
+        <div id="popup-content" class="popup-content"></div>
+    </div>
+
+    <!-- Include Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, updateDoc, addDoc, arrayUnion, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+
+    
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+            authDomain: "projj-7fa1d.firebaseapp.com",
+            projectId: "projj-7fa1d",
+            storageBucket: "projj-7fa1d.appspot.com",
+            messagingSenderId: "731552517830",
+            appId: "1:731552517830:web:10447552198f5af07c91c7",
+            measurementId: "G-H5JBP27FBD"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        window.viewUserProfile = function(userId) {
+            if (userId) {
+                window.location.href = `me.html?userId=${encodeURIComponent(userId)}`;
+            } else {
+                console.error('User ID is undefined');
+            }
+        };
+        // Function to fetch the email using userId
+        async function fetchUserEmail(userId) {
+            const userDocRef = doc(db, 'users', userId);
+            const userDoc = await getDoc(userDocRef);
+    
+            if (userDoc.exists()) {
+                return userDoc.data().email;
+            } else {
+                console.error('No such user!');
+                return 'Email not available';
+            }
+        }
+     
+        window.navigateToProtectedChat = async function(productId, posterId) {
+    const currentUser = auth.currentUser;
+    const adminId = 'KPAuOU28A7apFClq2QsWBhpw9yC3'; // Replace with your actual admin user ID
+
+    if (currentUser) {
+        const currentUserId = currentUser.uid;
+
+        if (currentUserId === posterId) {
+            alert("You cannot chat with yourself.");
+            return;
+        }
+
+        // Reference to the chats collection
+        const protectedChatsRef = collection(db, 'protectedChats');
+
+        // Query to check if a chat already exists between the two users for the specific product
+        const protectedChatQuery = query(protectedChatsRef, where('productId', '==', productId), where('users', 'array-contains', currentUserId));
+        const querySnapshot = await getDocs(protectedChatQuery);
+
+        let chatId;
+
+        if (querySnapshot.empty) {
+            // If no chat exists, create a new chat document including the admin user
+            const protectedChatDoc = await addDoc(protectedChatsRef, {
+                productId: productId,
+                users: [currentUserId, posterId, 'KPAuOU28A7apFClq2QsWBhpw9yC3'], // Include admin ID here
+                messages: [], // This will be an empty array initially
+                timestamp: new Date() // Timestamp of when the chat was created
+            });
+            chatId = protectedChatDoc.id;
+        } else {
+            // If a chat already exists, get the chat ID
+            chatId = querySnapshot.docs[0].id;
+        }
+
+        // Redirect to the protected chat page with the chat ID
+        window.location.href = `protected-chat.html?chatId=${encodeURIComponent(chatId)}&productId=${encodeURIComponent(productId)}&currentUserId=${encodeURIComponent(currentUserId)}`;
+    } else {
+        console.error('No user is currently logged in.');
+    }
+};
+
+
+        window.navigateToGroupChat = async function(productId, posterId) {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+        const currentUserId = currentUser.uid;
+
+        // Check if the current user is the one who posted the product
+        if (currentUserId === posterId) {
+            alert("You cannot chat with yourself.");
+            return;
+        }
+
+        // Reference to the group chats collection
+        const groupChatsRef = collection(db, 'groupChats');
+        const chatsRef = collection(db, 'chats');
+
+        // Query to check if a group chat already exists for the specific product
+        const groupChatQuery = query(groupChatsRef, where('productId', '==', productId));
+        const querySnapshot = await getDocs(groupChatQuery);
+
+        let chatId;
+
+        if (querySnapshot.empty) {
+            // If no group chat exists, create a new group chat document in both collections
+            const groupChatDoc = await addDoc(groupChatsRef, {
+                productId: productId,
+                users: [currentUserId,posterId], // Start with the current user, others will join
+                messages: [], // This will be an empty array initially
+                timestamp: new Date() // Timestamp of when the group chat was created
+            });
+            chatId = groupChatDoc.id;
+
+            
+        } else {
+            // If a group chat already exists, get the chat ID and update the users array if needed
+            chatId = querySnapshot.docs[0].id;
+            const groupChatData = querySnapshot.docs[0].data();
+            if (!groupChatData.users.includes(currentUserId)) {
+                await updateDoc(doc(groupChatsRef, chatId), {
+                    users: arrayUnion(currentUserId)
+                });
+
+                // Also update the document in the 'chats' collection
+                await updateDoc(doc(chatsRef, chatId), {
+                    users: arrayUnion(currentUserId)
+                });
+            }
+        }
+
+        // Redirect to the group chat page with the chat ID
+        window.location.href = `group-chat.html?chatId=${encodeURIComponent(chatId)}&productId=${encodeURIComponent(productId)}&currentUserId=${encodeURIComponent(currentUserId)}`;
+    } else {
+        console.error('No user is currently logged in.');
+    }
+};
+
+
+
+        window.navigateToChat = async function(productId, posterId) {
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                const currentUserId = currentUser.uid;
+    
+                if (currentUserId === posterId) {
+                    alert("You cannot chat with yourself.");
+                    return;
+                }
+    
+                // Reference to the chats collection
+                const chatsRef = collection(db, 'chats');
+    
+                // Query to check if a chat already exists between the two users for the specific product
+                const chatQuery = query(chatsRef, where('productId', '==', productId), where('users', 'array-contains', currentUserId));
+                const querySnapshot = await getDocs(chatQuery);
+    
+                let chatId;
+    
+                if (querySnapshot.empty) {
+                    // If no chat exists, create a new chat document
+                    const chatDoc = await addDoc(chatsRef, {
+                        productId: productId,
+                        users: [currentUserId, posterId], // Store both user IDs in an array
+                        messages: [], // This will be an empty array initially
+                        timestamp: new Date() // Timestamp of when the chat was created
+                    });
+                    chatId = chatDoc.id;
+                } else {
+                    // If a chat already exists, get the chat ID
+                    chatId = querySnapshot.docs[0].id;
+                }
+    
+                // Redirect to the chat page with the chat ID
+                window.location.href = `chat.html?chatId=${encodeURIComponent(chatId)}&productId=${encodeURIComponent(productId)}&currentUserId=${encodeURIComponent(currentUserId)}`;
+            } else {
+                console.error('No user is currently logged in.');
+            }
+        };
+        
+        // Function to handle like button click
+        async function handleLike(productId, userId) {
+            const userRef = doc(db, 'users', userId);
+            const productRef = doc(db, 'products', productId);
+    
+            const userDoc = await getDoc(userRef);
+            const userLikes = userDoc.data().liked || [];
+            const productDoc = await getDoc(productRef);
+            const productData = productDoc.data();
+            let liked = false;
+    
+            if (userLikes.includes(productId)) {
+                // Unlike
+                liked = true;
+                userLikes.splice(userLikes.indexOf(productId), 1);
+                productData.likes -= 1;
+            } else {
+                // Like
+                liked = false;
+                userLikes.push(productId);
+                productData.likes = (productData.likes || 0) + 1;
+            }
+    
+            await updateDoc(userRef, { liked: userLikes });
+            await updateDoc(productRef, { likes: productData.likes });
+    
+            return liked;
+        }
+    
+        function viewUserProfile(userId) {
+            window.location.href = `me.html?userId=${userId}`;
+        }
+    
+        // Function to show the popup with product details
+        function showPopup(productData, userEmail, productId, userId) {
+    console.log('User ID:', userId); 
+    const popup = document.getElementById('popup');
+    const popupContent = document.querySelector('.popup-content');
+    popupContent.innerHTML = `
+        <img src="${productData.photoURL || 'https://via.placeholder.com/200'}" alt="${productData.name}">
+        <p><strong>Name:</strong> ${productData.name}</p>
+        <p><strong>Description:</strong> ${productData.description}</p>
+        <p><strong>Category:</strong> ${productData.category}</p>
+        <p><strong>Price:</strong> $${productData.price.toFixed(2)}</p>
+        <p><strong>Posted on:</strong> ${new Date(productData.timestamp).toLocaleDateString()}</p>
+        <p><strong>Email:</strong> ${userEmail}</p>
+         <p><strong>Views:</strong> ${productData.views || 0}</p> <!-- Display views here -->
+        <button class="email-button" onclick="viewUserProfile('${userId}')">
+            View Profile
+        </button>
+        <button class="like-button" id="like-button" data-product-id="${productId}"><i class="fa-solid fa-heart"></i> <span id="like-count">${productData.likes || 0}</span></button>
+    `;
+    
+            window.viewUserProfile = function(userId) {
+                if (userId) {
+                    window.location.href = `http://127.0.0.1:5000/me.html?userId=${encodeURIComponent(userId)}`;
+                } else {
+                    console.error('User ID is undefined');
+                }
+            };
+    
+            if (productData.type === 'auction') {
+    popupContent.innerHTML += `
+        <p><strong>Start Date & Time:</strong> ${new Date(productData.startdaytime).toLocaleString()}</p>
+        <p><strong>End Date & Time:</strong> ${new Date(productData.enddaytime).toLocaleString()}</p>
+        <button onclick="navigateToGroupChat('${productId}','${userId}')">Discuss Auction</button>
+    `;
+
+
+            } else if (productData.type === 'customer-protection') {
+    popupContent.innerHTML += `<button onclick="navigateToProtectedChat('${productId}', '${userId}')">Protected Chat</button><button>Add to Cart</button>`;
+
+            } else if (productData.type === 'normal') {
+                popupContent.innerHTML += ` <button class="chat-button" onclick="navigateToChat('${productId}', '${userId}')">Chat</button><button>Make Offer</button>`;
+            }
+    
+            popup.style.display = 'block';
+    
+            document.getElementById('like-button').addEventListener('click', async (event) => {
+                const productId = event.target.closest('button').getAttribute('data-product-id');
+                const user = auth.currentUser;
+    
+                if (user) {
+                    const liked = await handleLike(productId, user.uid);
+                    document.querySelector('#like-count').textContent = parseInt(document.querySelector('#like-count').textContent) + (liked ? -1 : 1);
+                    document.querySelector('#like-button i').classList.toggle('fa-heart');
+                    document.querySelector('#like-button i').classList.toggle('fa-heart');
+                    document.querySelector('#like-button').classList.toggle('liked');
+                }
+            });
+        }
+        // Function to fetch and display products
+async function fetchProducts() {
+    const productList = document.getElementById('product-list');
+    const querySnapshot = await getDocs(collection(db, 'products'));
+
+    querySnapshot.forEach((doc) => {
+        const productData = doc.data();
+        const productId = doc.id;
+
+        const productCard = document.createElement('div');
+        productCard.classList.add('product-card');
+        productCard.innerHTML = `
+            <img src="${productData.photoURL || 'https://via.placeholder.com/150'}" alt="${productData.name}">
+            <div class="product-details">
+                <p><strong>${productData.name}</strong></p>
+                <p>${productData.description}</p>
+                <p><strong>Price:</strong> $${productData.price.toFixed(2)}</p>
+            </div>
+        `;
+        
+        // Add click event listener to the product card
+        productCard.addEventListener('click', async () => {
+            const userEmail = await fetchUserEmail(productData.userId);
+            showPopup(productData, userEmail, productId, productData.userId);
+        });
+
+        productList.appendChild(productCard);
+    });
+}
+
+// Call the fetchProducts function when the page loads
+window.onload = fetchProducts;
+        // Event listener to close the popup
+        document.querySelector('.close-popup').addEventListener('click', () => {
+            document.getElementById('popup').style.display = 'none';
+        });
+    
+        // Close popup when clicking outside of it
+        window.addEventListener('click', (event) => {
+            const popup = document.getElementById('popup');
+            if (event.target === popup) {
+                popup.style.display = 'none';
+            }
+        });
+        
+        // Fetch and display products
+        window.addEventListener('load', async () => {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    const category = new URLSearchParams(window.location.search).get('category');
+                    const productsRef = collection(db, "products");
+                    const q = query(productsRef, where("category", "==", category));
+                    const querySnapshot = await getDocs(q);
+    
+                    const productList = document.getElementById('product-list');
+                    productList.innerHTML = ''; // Clear existing products
+    
+                    if (querySnapshot.empty) {
+                        productList.innerHTML = '<p>No products found in this category.</p>';
+                    }
+    
+                    querySnapshot.forEach(async (doc) => {
+                        const productData = doc.data();
+                        const userEmail = await fetchUserEmail(productData.userId);  // Fetch the user's email
+    
+                        const isLiked = await checkIfLiked(user.uid, doc.id);
+    
+                        const productCard = document.createElement('div');
+                        
+                        let availabilityIcon = '';
+if (productData.availability === 'sold') {
+    availabilityIcon = '<img src="https://cdn-icons-png.flaticon.com/512/2331/2331975.png" alt="Sold" class="availability-icon sold-icon">';
+} else if (productData.availability === 'reserved') {
+    availabilityIcon = '<img src="https://cdn-icons-png.flaticon.com/512/3480/3480414.png" alt="Reserved" class="availability-icon reserved-icon">';
+}
+                        productCard.classList.add('product-card');
+                       
+    productCard.innerHTML = `
+        ${availabilityIcon}
+        <img src="${productData.photoURL || 'https://via.placeholder.com/150'}" alt="${productData.name}">
+        <div class="product-details">
+            <p><strong>Name:</strong> ${productData.name}</p>
+            <p><strong>Type:</strong> ${productData.type}</p>
+            <p><strong>Description:</strong> ${productData.description}</p>
+            <p><strong>Category:</strong> ${productData.category}</p>
+            <p><strong>Price:</strong> $${productData.price.toFixed(2)}</p>
+            <p><strong>Posted on:</strong> ${new Date(productData.timestamp).toLocaleDateString()}</p>
+            <p><strong>Likes:</strong> <span id="like-count-${doc.id}">${productData.likes || 0}</span></p>
+        </div>
+        <i class="fa${isLiked ? 's' : 'r'} fa-heart" id="like-icon-${doc.id}" onclick="toggleLike('${doc.id}', ${productData.likes || 0})" style="color: ${isLiked ? '#ff4081' : '#e0e0e0'}; cursor: pointer;"></i>
+    `;
+
+    productCard.addEventListener('click', () => {
+        showPopup(productData, userEmail, doc.id, productData.userId);
+    });
+
+    productList.appendChild(productCard);
+});
+                } else {
+                    window.location.href = 'unauthorized.html';
+                }
+            });
+        });
+    
+        async function checkIfLiked(userId, productId) {
+            const userDocRef = doc(db, 'users', userId);
+            const userDoc = await getDoc(userDocRef);
+            return userDoc.exists() && userDoc.data().liked && userDoc.data().liked.includes(productId);
+        }
+        async function incrementViewCount(productId) {
+    const productRef = doc(db, 'products', productId);
+    const productDoc = await getDoc(productRef);
+
+    if (productDoc.exists()) {
+        const currentViews = productDoc.data().views || 0;
+        await updateDoc(productRef, {
+            views: currentViews + 1
+        });
+        console.log(`View count for product ${productId} updated to ${currentViews + 1}`);
+    } else {
+        console.error('Product not found!');
+    }
+}
+        async function toggleLike(productId, currentLikes) {
+            const user = auth.currentUser;
+            const productRef = doc(db, 'products', productId);
+            const userRef = doc(db, 'users', user.uid);
+    
+            const isLiked = await checkIfLiked(user.uid, productId);
+    
+            if (isLiked) {
+                await updateDoc(productRef, { likes: currentLikes - 1 });
+                await updateDoc(userRef, { liked: arrayRemove(productId) });
+            } else {
+                await updateDoc(productRef, { likes: currentLikes + 1 });
+                await updateDoc(userRef, { liked: arrayUnion(productId) });
+            }
+    
+            document.getElementById(`like-count-${productId}`).textContent = isLiked ? currentLikes - 1 : currentLikes + 1;
+            document.getElementById(`like-icon-${productId}`).classList.toggle('fas');
+            document.getElementById(`like-icon-${productId}`).classList.toggle('far');
+            document.getElementById(`like-icon-${productId}`).style.color = isLiked ? '#e0e0e0' : '#ff4081';
+        }
+    </script>
+    

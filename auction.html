@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List Your Item</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text color */
+            margin: 0;
+            padding: 0;
+        }
+        
+        header {
+            background-color: #1f1f1f; /* Darker header */
+            color: #fff;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+        }
+        
+        main {
+            padding: 2rem;
+            max-width: 800px;
+            margin: auto;
+            background-color: #1e1e1e; /* Dark background for main content */
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Increased gap between fields */
+        }
+        
+        label {
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* Space between icon and label text */
+        }
+        
+        input, select, textarea {
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 0.75rem;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        input[type="checkbox"] {
+            accent-color: #ff4081; /* Stylish checkbox */
+            transform: scale(1.5); /* Larger checkbox */
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            border-color: #ff4081; /* Highlight border on focus */
+        }
+        
+        textarea {
+            resize: vertical;
+            height: 100px;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* Space between checkbox and text */
+        }
+        
+        .checkbox-icon {
+            font-size: 1.5rem; /* Larger icon */
+            color: #ff4081;
+            transition: transform 0.3s ease;
+        }
+        
+        .checkbox-container:hover .checkbox-icon {
+            transform: scale(1.2); /* Enlarge icon on hover */
+        }
+        
+        .checkbox-text {
+            font-size: 0.8rem; /* Smaller text */
+        }
+        
+        section {
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 1rem;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        section:hover {
+            background-color: #2c2c2c; /* Darker background on hover */
+            box-shadow: 0 0 10px rgba(255, 64, 129, 0.5); /* Pink shadow effect */
+        }
+        
+        button {
+            background-color: transparent;
+            color: #e0e0e0;
+            border: 1px solid #e0e0e0;
+            padding: 0.75rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            position: relative;
+            margin-top: 1rem;
+        }
+        
+        button:hover {
+            background-color: #333; /* Darken on hover */
+        }
+        
+        button::after {
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #ff4081; /* Neon pink underline */
+            transition: width 0.3s ease, left 0.3s ease;
+        }
+        
+        button:hover::after {
+            width: 100%;
+            left: 0;
+        }
+        
+        #sell::after {
+            width: 100%;
+            left: 0;
+        }
+
+        #list::after {
+            width: 100%;
+            left: 0;
+        }
+        
+        footer {
+            background-color: #1f1f1f; /* Darker footer */
+            color: #fff;
+            text-align: center;
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 10px 0;
+        }
+        
+        .nav-button {
+            background-color: transparent; /* Transparent background */
+            border: none;
+            color: #e0e0e0; /* Light text color */
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            position: relative; /* For underline effect */
+            transition: transform 0.3s, background-color 0.3s;
+        }
+        
+        .nav-button:hover {
+            background-color: #333; /* Darken on hover */
+            transform: scale(1.05);
+        }
+        
+        .nav-button::after {
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #ff4081; /* Neon pink underline */
+            transition: width 0.3s ease, left 0.3s ease;
+        }
+        
+        .nav-button:hover::after {
+            width: 100%;
+            left: 0;
+        }
+        
+        #sell::after {
+            width: 100%;
+            left: 0;
+        }
+
+        .auction-datetime {
+            display: none;
+            gap: 1rem;
+        }
+
+        .calendar-input {
+            width: 100%;
+        }
+    </style>
+    <!-- Include Firebase SDKs for Firestore and Storage -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-storage.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+            authDomain: "projj-7fa1d.firebaseapp.com",
+            projectId: "projj-7fa1d",
+            storageBucket: "projj-7fa1d.appspot.com",
+            messagingSenderId: "731552517830",
+            appId: "1:731552517830:web:10447552198f5af07c91c7",
+            measurementId: "G-H5JBP27FBD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // Check authentication state
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'unauthorized.html';
+            }
+        });
+
+        // Handle auction datetime visibility
+        document.getElementById('listing-type').addEventListener('change', function() {
+            const auctionDatetime = document.querySelector('.auction-datetime');
+            if (this.value === 'auction') {
+                auctionDatetime.style.display = 'flex';
+            } else {
+                auctionDatetime.style.display = 'none';
+            }
+        });
+
+        document.getElementById('list-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const user = auth.currentUser;
+            if (!user) {
+                alert('User not authenticated');
+                return;
+            }
+
+            const photoFile = document.getElementById('listing-photo').files[0];
+            const category = document.getElementById('listing-category').value;
+            const name = document.getElementById('listing-name').value;
+            const description = document.getElementById('listing-description').value;
+            const price = parseFloat(document.getElementById('listing-price').value);
+            const type = document.getElementById('listing-type').value;
+            const timestamp = new Date().toISOString();
+            const userId = user.uid;
+
+            let startdaytime = null;
+            let enddaytime = null;
+
+            if (type === 'auction') {
+                startdaytime = document.getElementById('listing-startdaytime').value;
+                enddaytime = document.getElementById('listing-enddaytime').value;
+            }
+
+            try {
+                const storageRef = ref(storage, `product_images/${photoFile.name}`);
+                await uploadBytes(storageRef, photoFile);
+                const photoURL = await getDownloadURL(storageRef);
+
+                await addDoc(collection(db, "products"), {
+                    category,
+                    name,
+                    description,
+                    photoURL,
+                    price,
+                    timestamp,
+                    type,
+                    userId,
+                    startdaytime,
+                    enddaytime
+                });
+
+                alert('Product listed successfully!');
+                window.location.href = 'user-products.html';
+            } catch (error) {
+                console.error('Error adding document: ', error);
+            }
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <i class="fas fa-store"></i> Your Marketplace
+        </div>
+    </header>
+
+    <main>
+        <h1>List Your Item</h1>
+        <form id="list-form">
+            <section>
+                <label for="listing-name">
+                    <i class="fas fa-tag"></i> Item Name
+                </label>
+                <input type="text" id="listing-name" name="name" required>
+            </section>
+
+            <section>
+                <label for="listing-description">
+                    <i class="fas fa-info-circle"></i> Description
+                </label>
+                <textarea id="listing-description" name="description" required></textarea>
+            </section>
+
+            <section>
+                <label for="listing-photo">
+                    <i class="fas fa-camera"></i> Upload Photo
+                </label>
+                <input type="file" id="listing-photo" name="photo" accept="image/*" required>
+            </section>
+
+            <section>
+                <label for="listing-price">
+                    <i class="fas fa-dollar-sign"></i> Price
+                </label>
+                <input type="number" id="listing-price" name="price" min="0" step="0.01" required>
+            </section>
+
+            <section>
+                <label for="listing-category">
+                    <i class="fas fa-list"></i> Category
+                </label>
+                <select id="listing-category" name="category" required>
+                    <option value="" disabled selected>Select Category</option>
+                    <option value="audio">Audio</option>
+                    <option value="babies-kids">Babies & Kids</option>
+                    <option value="beauty">Beauty & Personal Care</option>
+                    <option value="business">Business Services</option>
+                    <option value="car-accessories">Car Accessories</option>
+                    <option value="cars">Cars</option>
+                    <option value="computers">Computers & Tech</option>
+                    <option value="everything-else">Everything Else</option>
+                    <option value="furniture">Furniture & Home Living</option>
+                    <option value="health">Health & Nutrition</option>
+                    <option value="hobbies">Hobbies & Toys</option>
+                    <option value="home-services">Home Services</option>
+                    <option value="jobs">Jobs</option>
+                    <option value="learning">Learning & Enrichment</option>
+                    <option value="lifestyle">Lifestyle Services</option>
+                    <option value="luxury">Luxury</option>
+                    <option value="mens-fashion">Men's Fashion</option>
+                    <option value="mobile-phones">Mobile Phones & Gadgets</option>
+                    <option value="food-drinks">Food & Drinks</option>
+                    <option value="motorcycles">Motorcycles</option>
+                    <option value="pet-supplies">Pet Supplies</option>
+                    <option value="photography">Photography</option>
+                    <option value="property">Property</option>
+                    <option value="sports-equipment">Sports Equipment</option>
+                    <option value="tv-appliances">TV & Home Appliances</option>
+                    <option value="tickets">Tickets & Vouchers</option>
+                    <option value="video-gaming">Video Gaming</option>
+                    <option value="womens-fashion">Women's Fashion</option>
+                </select>
+            </section>
+
+            <section>
+                <label for="listing-type">
+                    <i class="fas fa-cog"></i> Listing Type
+                </label>
+                <select id="listing-type" name="type" required>
+                    <option value="normal">Normal Listing</option>
+                    <option value="auction">Auction</option>
+                    <option value="customer-protection">Customer Protection</option>
+                </select>
+            </section>
+
+            <section class="auction-datetime">
+                <label for="listing-startdaytime">
+                    <i class="fas fa-calendar-alt"></i> Start Date & Time
+                </label>
+                <input type="datetime-local" id="listing-startdaytime" name="startdaytime" class="calendar-input">
+
+                <label for="listing-enddaytime">
+                    <i class="fas fa-calendar-alt"></i> End Date & Time
+                </label>
+                <input type="datetime-local" id="listing-enddaytime" name="enddaytime" class="calendar-input">
+            </section>
+
+           <button type="submit"><i class="fas fa-check"></i> Confirm Listing</button>
+            <button type="button" onclick="window.location.href='list.html'"><i class="fas fa-list"></i> List</button>
+        </form>
+    </main>
+
+    <footer>
+        <div class="nav-buttons">
+            <button class="nav-button" id="home" onclick="window.location.href='home.html'">
+                <i class="fas fa-home"></i> Home
+            </button>
+            <button class="nav-button" id="sell" onclick="window.location.href='sell.html'">
+                <i class="fas fa-plus"></i> Sell
+            </button>
+            <button class="nav-button" id="me" onclick="window.location.href='me.html'">
+                <i class="fas fa-user"></i> Me
+            </button>
+            <button class="nav-button" id="settings" onclick="window.location.href='settings.html'">
+                <i class="fas fa-cog"></i> Settings
+            </button>
+        </div>
+    </footer>
+</body>
+</html>

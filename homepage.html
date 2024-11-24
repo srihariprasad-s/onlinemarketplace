@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPDATE YOUR PROFILE</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        h1 {
+            color: #f0f0f0;
+            margin-bottom: 20px;
+        }
+
+        #profile-container {
+            display: none;
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 300px;
+            text-align: center;
+        }
+
+        #profile-photo {
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            margin-bottom: 20px;
+        }
+
+        input[type="file"],
+        input[type="text"],
+        #login-button,
+        #skip-button {
+            margin-top: 20px;
+            background-color: #333;
+            border: none;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        input[type="file"]::file-selector-button {
+            background-color: #555;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .hover-effect:hover {
+            border-bottom: 2px solid #ff4081;
+        }
+
+        #login-message {
+            display: none;
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>UPDATE YOUR PROFILE</h1>
+    <div id="profile-container">
+        <img id="profile-photo" src="https://via.placeholder.com/100" alt="Profile Photo">
+        <div id="user-info">
+            <p>User ID: <span id="user-id"></span></p>
+            <p>Email: <span id="user-email"></span></p>
+        </div>
+        <input type="file" id="profilePictureInput" accept="image/*" class="hover-effect">
+        <input type="text" id="aboutInput" placeholder="Enter about yourself" class="hover-effect">
+        <button id="skip-button" class="hover-effect">Skip for now/Proceed</button>
+    </div>
+    <div id="login-message">
+        <p>You are trying to access the page without any account. Kindly login/register.</p>
+        <button id="login-button" class="hover-effect">Login</button>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+            authDomain: "projj-7fa1d.firebaseapp.com",
+            projectId: "projj-7fa1d",
+            storageBucket: "projj-7fa1d.appspot.com",
+            messagingSenderId: "731552517830",
+            appId: "1:731552517830:web:10447552198f5af07c91c7",
+            measurementId: "G-H5JBP27FBD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        const profileContainer = document.getElementById('profile-container');
+        const loginMessage = document.getElementById('login-message');
+        const profilePhoto = document.getElementById('profile-photo');
+        const loginButton = document.getElementById('login-button');
+        const skipButton = document.getElementById('skip-button');
+        const userIdElement = document.getElementById('user-id');
+        const userEmailElement = document.getElementById('user-email');
+        const fileInput = document.getElementById('profilePictureInput');
+        const aboutInput = document.getElementById('aboutInput');
+
+        // Handle authentication state
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                loginMessage.style.display = 'none';
+                profileContainer.style.display = 'block';
+                userIdElement.textContent = user.uid;
+                userEmailElement.textContent = user.email;
+
+                try {
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userDoc = await getDoc(userDocRef);
+
+                    if (userDoc.exists()) {
+                        if (userDoc.data().profilePhotoUrl) {
+                            profilePhoto.src = userDoc.data().profilePhotoUrl;
+                        }
+                        if (userDoc.data().about) {
+                            aboutInput.value = userDoc.data().about;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching user data:', error);
+                }
+            } else {
+                loginMessage.style.display = 'block';
+                profileContainer.style.display = 'none';
+            }
+        });
+
+        // Handle profile picture upload
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const user = auth.currentUser;
+                const storageRef = ref(storage, 'profile_pictures/' + user.uid + '/' + file.name);
+                try {
+                    await uploadBytes(storageRef, file);
+                    const downloadURL = await getDownloadURL(storageRef);
+                    
+                    // Update Firestore
+                    const userDocRef = doc(db, 'users', user.uid);
+                    await updateDoc(userDocRef, {
+                        profilePhotoUrl: downloadURL
+                    });
+
+                    // Update profile photo display
+                    profilePhoto.src = downloadURL;
+                } catch (error) {
+                    console.error('Error uploading file:', error);
+                }
+            }
+        });
+
+        // Handle about section update
+        aboutInput.addEventListener('change', async () => {
+            const aboutText = aboutInput.value;
+            const user = auth.currentUser;
+            try {
+                const userDocRef = doc(db, 'users', user.uid);
+                await updateDoc(userDocRef, {
+                    about: aboutText
+                });
+            } catch (error) {
+                console.error('Error updating about section:', error);
+            }
+        });
+
+        // Handle skip button click
+        skipButton.addEventListener('click', () => {
+            window.location.href = 'home.html'; // Redirect to home page
+        });
+
+        // Handle login button
+        loginButton.addEventListener('click', () => {
+            window.location.href = 'login.html'; // Redirect to login page
+        });
+    </script>
+</body>
+</html>

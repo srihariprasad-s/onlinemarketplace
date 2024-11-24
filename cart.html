@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #000;
+            color: #ff69b4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 50px auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ff69b4;
+        }
+
+        .product-card {
+            background-color: #333;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #ff69b4;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #ff69b4;
+        }
+
+        .product-card img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+
+        .product-card .product-details {
+            margin-top: 10px;
+        }
+
+        .remove-btn {
+            background-color: #ff69b4;
+            color: #000;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .remove-btn:hover {
+            background-color: #ff1493;
+        }
+
+        .checkout-btn {
+            background-color: #ff69b4;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+        .checkout-btn:hover {
+            background-color: #ff1493;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: #111;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #ff69b4;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 8px;
+            color: #fff;
+        }
+
+        .close {
+            color: #ff69b4;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .upi-image {
+            display: block;
+            margin: 20px auto;
+            width: 100px;
+        }
+
+        .pending-orders {
+    background-color: #333; /* Dark background color */
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #5e2a8a; /* Purple border */
+    color: #5e2a8a; /* Purple text */
+    margin-top: 30px;
+}
+
+.completed-orders {
+    background-color: #333; /* Dark background color */
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #2a8a5e; /* Green border */
+    color: #2a8a5e; /* Green text */
+    margin-top: 30px;
+    display: none; /* Initially hidden */
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Cart</h1>
+        <div id="cart-items"></div>
+        <button class="checkout-btn" id="checkout">Checkout</button>
+        <div id="pending-orders" class="pending-orders">
+            <h2>Pending Orders</h2>
+            <div id="pending-orders-list"></div>
+        </div>
+        <div id="completed-orders" class="completed-orders">
+            <h2>Completed Orders</h2>
+            <div id="completed-orders-list"></div>
+        </div>
+    </div>
+
+    <!-- Payment Popup Modal -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Order Summary</h2>
+            <div id="order-summary"></div>
+            <img src="your-upi-image.jpg" alt="UPI QR Code" class="upi-image">
+            <p>After paying, click "Confirm Payment" and the payment will be processed.</p>
+            <button class="checkout-btn" id="confirm-payment">Confirm Payment</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+        import { getFirestore, deleteDoc, getDocs, doc, getDoc, collection, query, where, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+            authDomain: "projj-7fa1d.firebaseapp.com",
+            projectId: "projj-7fa1d",
+            storageBucket: "projj-7fa1d.appspot.com",
+            messagingSenderId: "731552517830",
+            appId: "1:731552517830:web:10447552198f5af07c91c7",
+            measurementId: "G-H5JBP27FBD"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUserId = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                await loadCartItems();
+                await displayPendingOrders(); // Ensure pending orders are displayed on load
+                await displayCompletedOrders(); // Ensure completed orders are displayed on load
+            } else {
+                window.location.href = "unauthorized.html";
+            }
+        });
+
+        async function loadCartItems() {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const q = query(collection(db, "carts"), where("buyerId", "==", currentUserId), where("cartStatus", "==", "added"));
+            const querySnapshot = await getDocs(q);
+
+            let total = 0;
+            cartItemsContainer.innerHTML = "";
+
+            for (const cartDoc of querySnapshot.docs) {
+                const cartData = cartDoc.data();
+                const productData = await fetchProductDetails(cartData.productId);
+
+                if (productData) {
+                    total += productData.price;
+
+                    cartItemsContainer.innerHTML += `
+                        <div class="product-card">
+                            <img src="${productData.photoURL || 'https://via.placeholder.com/150'}" alt="${productData.name}">
+                            <div class="product-details">
+                                <p><strong>Name:</strong> ${productData.name}</p>
+                                <p><strong>Type:</strong> ${productData.type}</p>
+                                <p><strong>Description:</strong> ${productData.description}</p>
+                                <p><strong>Category:</strong> ${productData.category}</p>
+                                <p><strong>Price:</strong> ₹${productData.price}</p>
+                                <p><strong>Posted on:</strong> ${new Date(productData.timestamp).toLocaleDateString()}</p>
+                            </div>
+                            <button class="remove-btn" data-cart-id="${cartDoc.id}">Remove</button>
+                        </div>
+                    `;
+                }
+            }
+
+            document.getElementById('checkout').addEventListener('click', () => {
+                showOrderSummary(querySnapshot, total);
+            });
+
+            const removeButtons = document.querySelectorAll('.remove-btn');
+            removeButtons.forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const cartId = event.target.getAttribute('data-cart-id');
+                    await deleteDoc(doc(db, "carts", cartId));
+                    loadCartItems();
+                });
+            });
+        }
+
+        async function showOrderSummary(cartItems, total) {
+            const modal = document.getElementById("myModal");
+            const summaryContainer = document.getElementById("order-summary");
+            summaryContainer.innerHTML = "";
+
+            cartItems.forEach(async (cartDoc) => {
+                const cartData = cartDoc.data();
+                const productData = await fetchProductDetails(cartData.productId);
+
+                if (productData) {
+                    summaryContainer.innerHTML += `
+                        <div class="product-card">
+                            <img src="${productData.photoURL || 'https://via.placeholder.com/150'}" alt="${productData.name}">
+                            <div class="product-details">
+                                <p><strong>Name:</strong> ${productData.name}</p>
+                                <p><strong>Price:</strong> ₹${productData.price}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            summaryContainer.innerHTML += `<h3>Grand Total: ₹${total}</h3>`;
+            modal.style.display = "block";
+
+            document.getElementById('confirm-payment').addEventListener('click', () => {
+                confirmPayment(cartItems);
+            });
+        }
+
+        async function confirmPayment(cartItems) {
+            const modal = document.getElementById("myModal");
+
+            for (const cartDoc of cartItems.docs) {
+                const cartDocRef = doc(db, "carts", cartDoc.id);
+                await updateDoc(cartDocRef, {
+                    cartStatus: "pending",
+                    paymentTimestamp: serverTimestamp()
+                });
+            }
+
+            modal.style.display = "none";
+            await displayPendingOrders(); // Fetch and display updated pending orders
+            await displayCompletedOrders(); // Fetch and display updated completed orders
+            alert("Payment pending. Your order is being processed and will be approved soon.");
+        }
+
+        async function displayPendingOrders() {
+            const pendingOrdersSection = document.getElementById("pending-orders");
+            const pendingOrdersList = document.getElementById("pending-orders-list");
+            const q = query(collection(db, "carts"), where("buyerId", "==", currentUserId), where("cartStatus", "==", "pending"));
+            const querySnapshot = await getDocs(q);
+
+            pendingOrdersList.innerHTML = "";
+
+            for (const cartDoc of querySnapshot.docs) {
+                const cartData = cartDoc.data();
+                const productData = await fetchProductDetails(cartData.productId);
+
+                if (productData) {
+                    pendingOrdersList.innerHTML += `
+                        <div class="product-card">
+                            <img src="${productData.photoURL || 'https://via.placeholder.com/150'}" alt="${productData.name}">
+                            <div class="product-details">
+                                <p><strong>Name:</strong> ${productData.name}</p>
+                                <p><strong>Price:</strong> ₹${productData.price}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            pendingOrdersSection.style.display = "block";
+        }
+
+        async function displayCompletedOrders() {
+            const completedOrdersSection = document.getElementById("completed-orders");
+            const completedOrdersList = document.getElementById("completed-orders-list");
+            const q = query(collection(db, "carts"), where("buyerId", "==", currentUserId), where("cartStatus", "==", "completed"));
+            const querySnapshot = await getDocs(q);
+
+            completedOrdersList.innerHTML = "";
+
+            for (const cartDoc of querySnapshot.docs) {
+                const cartData = cartDoc.data();
+                const productData = await fetchProductDetails(cartData.productId);
+
+                if (productData) {
+                    completedOrdersList.innerHTML += `
+                        <div class="product-card">
+                            <img src="${productData.photoURL || 'https://via.placeholder.com/150'}" alt="${productData.name}">
+                            <div class="product-details">
+                                <p><strong>Name:</strong> ${productData.name}</p>
+                                <p><strong>Price:</strong> ₹${productData.price}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            completedOrdersSection.style.display = "block";
+        }
+
+        const modal = document.getElementById("myModal");
+        const closeModal = document.getElementsByClassName("close")[0];
+
+        closeModal.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        async function fetchProductDetails(productId) {
+            const productDocRef = doc(db, 'products', productId);
+            const productDoc = await getDoc(productDocRef);
+            if (productDoc.exists()) {
+                return productDoc.data();
+            } else {
+                console.error('Product not found!');
+                return null;
+            }
+        }
+    </script>
+</body>
+</html>

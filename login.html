@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text color */
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .input-field {
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 300px;
+            border: 2px solid #333; /* Dark border */
+            border-radius: 5px;
+            background-color: #222; /* Slightly darker background for fields */
+            color: #e0e0e0; /* Light text color */
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #ff4081; /* Neon pink border on focus */
+            background-color: #333; /* Slightly lighter background on focus */
+            outline: none;
+        }
+
+        .button {
+            padding: 10px 20px;
+            background-color: #333; /* Dark background for buttons */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #e0e0e0; /* Light text color */
+            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem; /* Button text size */
+            position: relative;
+        }
+
+        .button i {
+            margin-right: 10px;
+            font-size: 1.2rem; /* Icon size */
+        }
+
+        .button:hover {
+            background-color: #444; /* Slightly lighter background on hover */
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Shadow effect */
+        }
+
+        .button::after {
+            content: '';
+            display: block;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: #ff4081; /* Neon pink underline color */
+            transition: width 0.3s ease, left 0.3s ease;
+            z-index: 1;
+        }
+
+        .button:hover::after {
+            width: 100%;
+            left: 0;
+        }
+
+        /* Error popup styles */
+        #errorPopup {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #333;
+            color: #e0e0e0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        #closePopup {
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #ff4081;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <input type="text" id="emailOrPhone" placeholder="Email or Phone" class="input-field">
+        <input type="password" id="password" placeholder="Password" class="input-field">
+        <button class="button" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
+        <div id="forgotPassword" class="button"><i class="fas fa-unlock-alt"></i> Forgot Password?</div>
+    </div>
+
+    <!-- Error Popup -->
+    <div id="overlay"></div>
+    <div id="errorPopup">
+        <span id="closePopup">&times;</span>
+        <p id="errorMessage"></p>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAm9VTkFRrLYC2jnT3xAy8kwj2cAjLjyI4",
+            authDomain: "projj-7fa1d.firebaseapp.com",
+            projectId: "projj-7fa1d",
+            storageBucket: "projj-7fa1d.appspot.com",
+            messagingSenderId: "731552517830",
+            appId: "1:731552517830:web:10447552198f5af07c91c7",
+            measurementId: "G-H5JBP27FBD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const loginBtn = document.getElementById('loginBtn');
+        const forgotPassword = document.getElementById('forgotPassword');
+        const errorPopup = document.getElementById('errorPopup');
+        const overlay = document.getElementById('overlay');
+        const errorMessage = document.getElementById('errorMessage');
+        const closePopup = document.getElementById('closePopup');
+
+        loginBtn.addEventListener('click', () => {
+            const emailOrPhone = document.getElementById('emailOrPhone').value;
+            const password = document.getElementById('password').value;
+
+            // Log in with email and password
+            signInWithEmailAndPassword(auth, emailOrPhone, password)
+                .then((userCredential) => {
+                    // Successful login
+                    const user = userCredential.user;
+                    // Store user ID and email in localStorage
+                    localStorage.setItem('userID', user.uid);
+                    localStorage.setItem('userEmail', user.email);
+                    // Redirect to homepage
+                    window.location.href = "homepage.html";
+                })
+                .catch((error) => {
+                    // Show error in popup
+                    errorMessage.innerText = error.message;
+                    errorPopup.style.display = 'block';
+                    overlay.style.display = 'block';
+                });
+        });
+
+        forgotPassword.addEventListener('click', () => {
+            const emailOrPhone = prompt('Please enter your email to reset your password:');
+
+            if (emailOrPhone) {
+                sendPasswordResetEmail(auth, emailOrPhone)
+                    .then(() => {
+                        alert('Password reset email sent. Please check your inbox.');
+                    })
+                    .catch((error) => {
+                        // Show error in popup
+                        errorMessage.innerText = error.message;
+                        errorPopup.style.display = 'block';
+                        overlay.style.display = 'block';
+                    });
+            }
+        });
+
+        closePopup.addEventListener('click', () => {
+            errorPopup.style.display = 'none';
+            overlay.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
